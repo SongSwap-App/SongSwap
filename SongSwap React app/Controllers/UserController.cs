@@ -26,10 +26,21 @@ namespace SongSwap_React_app.Controllers
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Authorization", "Basic " + _authenticationService.GetBasic64Authentication());
             var response = await client.SendAsync(request);
-            response.EnsureSuccessStatusCode();
-            var data = await response.Content.ReadAsStringAsync();
-            User user = JsonSerializer.Deserialize<User>(data)!;
-            return Ok(user);
+            if (response.IsSuccessStatusCode) 
+            {
+                var data = await response.Content.ReadAsStringAsync();
+                User user = JsonSerializer.Deserialize<User>(data)!;
+                user.Id = id;
+                return Ok(user);
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                return Unauthorized("Reauthorization required");
+            }
+            else 
+            { 
+                return BadRequest(); 
+            }
         }
     }
 }
