@@ -47,18 +47,5 @@ namespace SongSwap_React_app.Controllers
             }
         }
 
-        [HttpGet("2")]
-        public async Task<IActionResult> TestMusicAPI()
-        {
-            var clientId = "c854382e-1952-4371-8812-7085144334cc";
-            var client = new HttpClient();
-            var request = new HttpRequestMessage(HttpMethod.Get, "https://api.musicapi.com/api/" + clientId + "/playlists");
-            request.Headers.Add("Accept", "application/json");
-            request.Headers.Add("Authorization", "Basic " + _authenticationService.GetBasic64Authentication());
-            var responce = await client.SendAsync(request);
-            responce.EnsureSuccessStatusCode();
-            return Ok(responce.Content.ReadAsStringAsync());
-        }
-
     }
 }
