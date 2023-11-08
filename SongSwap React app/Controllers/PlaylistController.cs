@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SongSwap_React_app.Models;
+using SongSwap_React_app.Models.Services;
 using System.Buffers.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -13,13 +14,13 @@ namespace SongSwap_React_app.Controllers
     [EnableCors("AllowSpecificOrigin")]
     public class PlaylistController : ControllerBase
     {
-        private readonly IConfiguration _configuration;
+        private readonly AuthenticationService _authenticationService;
         private readonly ILogger<PlaylistController> _logger;
 
-        public PlaylistController(IConfiguration configuration, ILogger<PlaylistController> logger)
+        public PlaylistController(ILogger<PlaylistController> logger, AuthenticationService authenticationService)
         {
-            _configuration = configuration;
             _logger = logger;
+            _authenticationService = authenticationService;
         }
 
         [HttpGet]
@@ -31,14 +32,14 @@ namespace SongSwap_React_app.Controllers
             var client = new HttpClient();
             var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.musicapi.com/api/{userId}/playlists/" + playlistId);
             request.Headers.Add("Accept", "application/json");
-            request.Headers.Add("Authorization", "Basic " + GetBasicAuthoorization());
+            request.Headers.Add("Authorization", "Basic " + _authenticationService.GetBasic64Authentication());
             var response = await client.SendAsync(request);
             response.EnsureSuccessStatusCode();
             var data = await response.Content.ReadAsStringAsync();
             Playlist playlist = JsonSerializer.Deserialize<Playlist>(data)!;
             var itemsRequest = new HttpRequestMessage(HttpMethod.Get, $"https://api.musicapi.com/api/{userId}/playlists/" + playlistId + "/items");
             itemsRequest.Headers.Add("Accept", "application/json");
-            itemsRequest.Headers.Add("Authorization", "Basic " + GetBasicAuthoorization());
+            itemsRequest.Headers.Add("Authorization", "Basic " + _authenticationService.GetBasic64Authentication());
             var itemsResponse = await client.SendAsync(itemsRequest);
             itemsResponse.EnsureSuccessStatusCode();
             var itemsData = await itemsResponse.Content.ReadAsStringAsync();
@@ -53,17 +54,11 @@ namespace SongSwap_React_app.Controllers
             var client = new HttpClient();
             var request = new HttpRequestMessage(HttpMethod.Get, "https://api.musicapi.com/api/" + clientId + "/playlists");
             request.Headers.Add("Accept", "application/json");
-            request.Headers.Add("Authorization", "Basic " + GetBasicAuthoorization());
+            request.Headers.Add("Authorization", "Basic " + _authenticationService.GetBasic64Authentication());
             var responce = await client.SendAsync(request);
             responce.EnsureSuccessStatusCode();
             return Ok(responce.Content.ReadAsStringAsync());
         }
 
-        private string? GetBasicAuthoorization()
-        {
-            var plaintAuthorizationText = System.Text.Encoding.UTF8.GetBytes(_configuration["MusicApi:ClientId"] + ":" + _configuration["MusicApi:ClientSecret"]);
-            var base64Text = System.Convert.ToBase64String(plaintAuthorizationText);
-            return base64Text;
-        }
     }
 }
