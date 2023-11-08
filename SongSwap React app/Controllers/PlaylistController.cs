@@ -23,28 +23,28 @@ namespace SongSwap_React_app.Controllers
             _authenticationService = authenticationService;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Get() 
+        [HttpGet("{userId}")]
+        public async Task<IActionResult> GetPlaylistsByUserUUID(string userId) 
         {
-            string playlistId = "PLTOafDscBbuxUBpBAow7O9CMYVknfhVP4";
-            string userId = "c854382e-1952-4371-8812-7085144334cc";
-            
             var client = new HttpClient();
-            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.musicapi.com/api/{userId}/playlists/" + playlistId);
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.musicapi.com/api/{userId}/playlists/");
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Authorization", "Basic " + _authenticationService.GetBasic64Authentication());
             var response = await client.SendAsync(request);
-            response.EnsureSuccessStatusCode();
-            var data = await response.Content.ReadAsStringAsync();
-            Playlist playlist = JsonSerializer.Deserialize<Playlist>(data)!;
-            var itemsRequest = new HttpRequestMessage(HttpMethod.Get, $"https://api.musicapi.com/api/{userId}/playlists/" + playlistId + "/items");
-            itemsRequest.Headers.Add("Accept", "application/json");
-            itemsRequest.Headers.Add("Authorization", "Basic " + _authenticationService.GetBasic64Authentication());
-            var itemsResponse = await client.SendAsync(itemsRequest);
-            itemsResponse.EnsureSuccessStatusCode();
-            var itemsData = await itemsResponse.Content.ReadAsStringAsync();
-            playlist.Items = JsonSerializer.Deserialize<SongResponse>(itemsData)!.Songs;
-            return Ok(playlist);
+            if (response.IsSuccessStatusCode) 
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var playlists = JsonSerializer.Deserialize<PlaylistsResponse>(content);
+                return Ok(playlists);
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                return Unauthorized("Reathorization required");
+            }
+            else
+            {
+                return BadRequest();
+            }
         }
 
         [HttpGet("2")]

@@ -14,6 +14,6 @@ namespace SongSwap_React_app.Models
         [JsonPropertyName("totalItems")]
         public int TotalItems { get; set; }
 
-        public List<Song>? Items { get; set; }
+        public List<Song> Items { get; set; } = new List<Song>();
     }
 }
