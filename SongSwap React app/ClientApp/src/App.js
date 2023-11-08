@@ -1,22 +1,16 @@
-import React, { Component } from 'react';
-import { Route, Routes } from 'react-router-dom';
-import AppRoutes from './AppRoutes';
-import { Layout } from './components/Layout';
-import './custom.css';
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import HomePage from './components/HomePage';
+import UserPage from './components/UserPage';
+import Callback from './components/Callback';
 
-export default class App extends Component {
-  static displayName = App.name;
-
-  render() {
+export default function App() {
     return (
-      <Layout>
         <Routes>
-          {AppRoutes.map((route, index) => {
-            const { element, ...rest } = route;
-            return <Route key={index} {...rest} element={element} />;
-          })}
+            <Route path="/" element={<HomePage />} />
+            <Route path="/:id" element={<UserPage />} />
+            <Route path="/callback" element={ <Callback /> } />
         </Routes>
-      </Layout>
     );
-  }
 }
+

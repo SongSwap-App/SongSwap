@@ -1,18 +1,20 @@
-import React, { Component } from 'react';
-import { Container } from 'reactstrap';
-import { NavMenu } from './NavMenu';
+import React from 'react';
+import "./Layout.css"
 
-export class Layout extends Component {
-  static displayName = Layout.name;
-
-  render() {
+const Layout = ({ children }) => {
     return (
-      <div>
-        <NavMenu />
-        <Container>
-          {this.props.children}
-        </Container>
-      </div>
+        <div>
+            <header>
+                <img src="SongSwap_Logo.jpg" alt="logo" className="logo" />
+            </header>
+            <main>
+                {children}
+            </main>
+            <footer>
+                <a href="https://github.com/Oordii/SongSwap" target="_blank">GitHub</a>
+            </footer>
+        </div>
     );
-  }
-}
+};
+
+export default Layout;

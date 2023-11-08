@@ -3,6 +3,17 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin",
+        builder => builder.WithOrigins("https://localhost:44418")
+        .SetIsOriginAllowedToAllowWildcardSubdomains()// Add the origin(s) that you want to allow.
+        .AllowAnyHeader()
+        .AllowAnyMethod());
+});
+
 
 var app = builder.Build();
 
@@ -13,14 +24,23 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+if(app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+    });
+}
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-
+app.UseCors();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller}/{action=Index}/{id?}");
+    pattern: "api/{controller}/{action=Index}/{id?}");
 
 app.MapFallbackToFile("index.html"); ;
 
