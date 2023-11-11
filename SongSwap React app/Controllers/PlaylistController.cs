@@ -52,18 +52,18 @@ namespace SongSwap_React_app.Controllers
         {
             if (userId == null || source == null)
             {
-                return BadRequest("Invalid input data");
+                return BadRequest("Invalid user ID");
             }
 
             var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+            client.DefaultRequestHeaders.Add("Authorization", "Basic " + _authenticationService.GetBasic64Authentication());
 
             List<string> itemIds = new();
 
             foreach (var item in source.Items)
             {
                 var searchRequest = new HttpRequestMessage(HttpMethod.Post, $"https://api.musicapi.com/api/{userId}/search");
-                searchRequest.Headers.Add("Accept", "application/json");
-                searchRequest.Headers.Add("Authorization", "Basic " + _authenticationService.GetBasic64Authentication());
                 searchRequest.Options.Set(new HttpRequestOptionsKey<int>("limitParam"), 1);
                 var searchRequestBody = new List<KeyValuePair<string, string>>()
                 {
@@ -87,8 +87,6 @@ namespace SongSwap_React_app.Controllers
             }
 
             var createRequest = new HttpRequestMessage(HttpMethod.Post, $"https://api.musicapi.com/api/{userId}/playlists");
-            createRequest.Headers.Add("Accept", "application/json");
-            createRequest.Headers.Add("Authorization", "Basic " + _authenticationService.GetBasic64Authentication());
             var createRequestBody = new List<KeyValuePair<string, string>>
             {
                 new KeyValuePair<string, string>("name", source.Name)
@@ -96,22 +94,17 @@ namespace SongSwap_React_app.Controllers
             createRequest.Content = new FormUrlEncodedContent(createRequestBody);
             var createResponse = await client.SendAsync(createRequest);
             createResponse.EnsureSuccessStatusCode();
-
             var createResponseBody = await createResponse.Content.ReadAsStringAsync();
             var newPlaylist = JsonSerializer.Deserialize<Playlist>(createResponseBody);
         
 
             var populateRequest = new HttpRequestMessage(HttpMethod.Post, $"https://api.musicapi.com/api/{userId}/playlists/{newPlaylist!.Id}/items");
-            populateRequest.Headers.Add("Accept", "application/json");
-            populateRequest.Headers.Add("Authorization", "Basic " + _authenticationService.GetBasic64Authentication());
-
             var populateRequestBody = new List<KeyValuePair<string, string>>();
 
             foreach (var itemId in itemIds)
             {
                 populateRequestBody.Add(new KeyValuePair<string, string>("itemIds[]", itemId));
             }
-            
             populateRequest.Content = new FormUrlEncodedContent(populateRequestBody);   
             var populateResponse = await client.SendAsync(populateRequest);
             populateResponse.EnsureSuccessStatusCode();
