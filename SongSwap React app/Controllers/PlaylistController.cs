@@ -24,14 +24,14 @@ namespace SongSwap_React_app.Controllers
         }
 
         [HttpGet("{userId}")]
-        public async Task<IActionResult> GetPlaylistsByUserUUID(string userId) 
+        public async Task<IActionResult> GetPlaylistsByUserUUID(string userId)
         {
             var client = new HttpClient();
-            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.musicapi.com/api/{userId}/playlists/");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.musicapi.com/api/{userId}/playlists");
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Authorization", "Basic " + _authenticationService.GetBasic64Authentication());
             var response = await client.SendAsync(request);
-            if (response.IsSuccessStatusCode) 
+            if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
                 var playlists = JsonSerializer.Deserialize<PlaylistsResponse>(content);
@@ -47,5 +47,77 @@ namespace SongSwap_React_app.Controllers
             }
         }
 
+        [HttpPost("{userId}")]
+        public async Task<IActionResult> CreatePlaylist(string userId, [FromBody] Playlist source)
+        {
+            if (userId == null || source == null)
+            {
+                return BadRequest("Invalid input data");
+            }
+
+            var client = new HttpClient();
+
+            List<string> itemIds = new();
+
+            foreach (var item in source.Items)
+            {
+                var searchRequest = new HttpRequestMessage(HttpMethod.Post, $"https://api.musicapi.com/api/{userId}/search");
+                searchRequest.Headers.Add("Accept", "application/json");
+                searchRequest.Headers.Add("Authorization", "Basic " + _authenticationService.GetBasic64Authentication());
+                searchRequest.Options.Set(new HttpRequestOptionsKey<int>("limitParam"), 1);
+                var searchRequestBody = new List<KeyValuePair<string, string>>()
+                {
+                    new KeyValuePair<string, string>("type", "track"),
+                    new KeyValuePair<string, string>("track", item.Name),
+                    new KeyValuePair<string, string>("artist", string.Empty),
+                    new KeyValuePair<string, string>("album", string.Empty),
+                    new KeyValuePair<string, string>("isrc", string.Empty)
+                };
+                searchRequest.Content = new FormUrlEncodedContent(searchRequestBody);
+
+                var searchResponce = await client.SendAsync(searchRequest);
+
+                var content = await searchResponce.Content.ReadAsStringAsync();
+                var searchResult = JsonSerializer.Deserialize<SearchResponse>(content);
+
+                if (searchResult != null)
+                {
+                    itemIds.Add(searchResult.Items[0].Id);
+                }
+            }
+
+            var createRequest = new HttpRequestMessage(HttpMethod.Post, $"https://api.musicapi.com/api/{userId}/playlists");
+            createRequest.Headers.Add("Accept", "application/json");
+            createRequest.Headers.Add("Authorization", "Basic " + _authenticationService.GetBasic64Authentication());
+            var createRequestBody = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>("name", source.Name)
+            };
+            createRequest.Content = new FormUrlEncodedContent(createRequestBody);
+            var createResponse = await client.SendAsync(createRequest);
+            createResponse.EnsureSuccessStatusCode();
+
+            var createResponseBody = await createResponse.Content.ReadAsStringAsync();
+            var newPlaylist = JsonSerializer.Deserialize<Playlist>(createResponseBody);
+        
+
+            var populateRequest = new HttpRequestMessage(HttpMethod.Post, $"https://api.musicapi.com/api/{userId}/playlists/{newPlaylist!.Id}/items");
+            populateRequest.Headers.Add("Accept", "application/json");
+            populateRequest.Headers.Add("Authorization", "Basic " + _authenticationService.GetBasic64Authentication());
+
+            var populateRequestBody = new List<KeyValuePair<string, string>>();
+
+            foreach (var itemId in itemIds)
+            {
+                populateRequestBody.Add(new KeyValuePair<string, string>("itemIds[]", itemId));
+            }
+            
+            populateRequest.Content = new FormUrlEncodedContent(populateRequestBody);   
+            var populateResponse = await client.SendAsync(populateRequest);
+            populateResponse.EnsureSuccessStatusCode();
+            
+
+            return Ok();
+        }
     }
 }
