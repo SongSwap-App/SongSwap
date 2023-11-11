@@ -47,6 +47,27 @@ namespace SongSwap_React_app.Controllers
             }
         }
 
+        [HttpGet("{userId}/{playlistId}")]
+        public async Task<IActionResult> GetPlaylistItems(string userId, string playlistId)
+        {
+            var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+            client.DefaultRequestHeaders.Add("Authorization", "Basic " + _authenticationService.GetBasic64Authentication());
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.musicapi.com/api/{userId}/playlists/{playlistId}/items");
+            var response = await client.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var items = JsonSerializer.Deserialize<SearchResponse>(content);
+                return Ok(items!.Items);
+            }
+            else 
+            {
+                return BadRequest(); 
+            }
+        }
+
         [HttpPost("{userId}")]
         public async Task<IActionResult> CreatePlaylist(string userId, [FromBody] Playlist source)
         {
