@@ -23,42 +23,115 @@ namespace SongSwap_React_app.Controllers
             _authenticationService = authenticationService;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Get() 
+        [HttpGet("{userId}")]
+        public async Task<IActionResult> GetPlaylistsByUserUUID(string userId)
         {
-            string playlistId = "PLTOafDscBbuxUBpBAow7O9CMYVknfhVP4";
-            string userId = "c854382e-1952-4371-8812-7085144334cc";
-            
             var client = new HttpClient();
-            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.musicapi.com/api/{userId}/playlists/" + playlistId);
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.musicapi.com/api/{userId}/playlists");
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Authorization", "Basic " + _authenticationService.GetBasic64Authentication());
             var response = await client.SendAsync(request);
-            response.EnsureSuccessStatusCode();
-            var data = await response.Content.ReadAsStringAsync();
-            Playlist playlist = JsonSerializer.Deserialize<Playlist>(data)!;
-            var itemsRequest = new HttpRequestMessage(HttpMethod.Get, $"https://api.musicapi.com/api/{userId}/playlists/" + playlistId + "/items");
-            itemsRequest.Headers.Add("Accept", "application/json");
-            itemsRequest.Headers.Add("Authorization", "Basic " + _authenticationService.GetBasic64Authentication());
-            var itemsResponse = await client.SendAsync(itemsRequest);
-            itemsResponse.EnsureSuccessStatusCode();
-            var itemsData = await itemsResponse.Content.ReadAsStringAsync();
-            playlist.Items = JsonSerializer.Deserialize<SongResponse>(itemsData)!.Songs;
-            return Ok(playlist);
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var playlists = JsonSerializer.Deserialize<PlaylistsResponse>(content);
+                return Ok(playlists);
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                return Unauthorized("Reathorization required");
+            }
+            else
+            {
+                return BadRequest();
+            }
         }
 
-        [HttpGet("2")]
-        public async Task<IActionResult> TestMusicAPI()
+        [HttpGet("{userId}/{playlistId}")]
+        public async Task<IActionResult> GetPlaylistItems(string userId, string playlistId)
         {
-            var clientId = "c854382e-1952-4371-8812-7085144334cc";
             var client = new HttpClient();
-            var request = new HttpRequestMessage(HttpMethod.Get, "https://api.musicapi.com/api/" + clientId + "/playlists");
-            request.Headers.Add("Accept", "application/json");
-            request.Headers.Add("Authorization", "Basic " + _authenticationService.GetBasic64Authentication());
-            var responce = await client.SendAsync(request);
-            responce.EnsureSuccessStatusCode();
-            return Ok(responce.Content.ReadAsStringAsync());
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+            client.DefaultRequestHeaders.Add("Authorization", "Basic " + _authenticationService.GetBasic64Authentication());
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.musicapi.com/api/{userId}/playlists/{playlistId}/items");
+            var response = await client.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var items = JsonSerializer.Deserialize<SearchResponse>(content);
+                return Ok(items!.Items);
+            }
+            else 
+            {
+                return BadRequest(); 
+            }
         }
 
+        [HttpPost("{userId}")]
+        public async Task<IActionResult> CreatePlaylist(string userId, [FromBody] Playlist source)
+        {
+            if (userId == null || source == null)
+            {
+                return BadRequest("Invalid user ID");
+            }
+
+            var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+            client.DefaultRequestHeaders.Add("Authorization", "Basic " + _authenticationService.GetBasic64Authentication());
+
+            List<string> itemIds = new();
+
+            foreach (var item in source.Items)
+            {
+                var searchRequest = new HttpRequestMessage(HttpMethod.Post, $"https://api.musicapi.com/api/{userId}/search");
+                searchRequest.Options.Set(new HttpRequestOptionsKey<int>("limitParam"), 1);
+                var searchRequestBody = new List<KeyValuePair<string, string>>()
+                {
+                    new KeyValuePair<string, string>("type", "track"),
+                    new KeyValuePair<string, string>("track", item.Name),
+                    new KeyValuePair<string, string>("artist", string.Empty),
+                    new KeyValuePair<string, string>("album", string.Empty),
+                    new KeyValuePair<string, string>("isrc", string.Empty)
+                };
+                searchRequest.Content = new FormUrlEncodedContent(searchRequestBody);
+
+                var searchResponce = await client.SendAsync(searchRequest);
+
+                var content = await searchResponce.Content.ReadAsStringAsync();
+                var searchResult = JsonSerializer.Deserialize<SearchResponse>(content);
+
+                if (searchResult != null)
+                {
+                    itemIds.Add(searchResult.Items[0].Id);
+                }
+            }
+
+            var createRequest = new HttpRequestMessage(HttpMethod.Post, $"https://api.musicapi.com/api/{userId}/playlists");
+            var createRequestBody = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>("name", source.Name)
+            };
+            createRequest.Content = new FormUrlEncodedContent(createRequestBody);
+            var createResponse = await client.SendAsync(createRequest);
+            createResponse.EnsureSuccessStatusCode();
+            var createResponseBody = await createResponse.Content.ReadAsStringAsync();
+            var newPlaylist = JsonSerializer.Deserialize<Playlist>(createResponseBody);
+        
+
+            var populateRequest = new HttpRequestMessage(HttpMethod.Post, $"https://api.musicapi.com/api/{userId}/playlists/{newPlaylist!.Id}/items");
+            var populateRequestBody = new List<KeyValuePair<string, string>>();
+
+            foreach (var itemId in itemIds)
+            {
+                populateRequestBody.Add(new KeyValuePair<string, string>("itemIds[]", itemId));
+            }
+            populateRequest.Content = new FormUrlEncodedContent(populateRequestBody);   
+            var populateResponse = await client.SendAsync(populateRequest);
+            populateResponse.EnsureSuccessStatusCode();
+            
+
+            return Ok();
+        }
     }
 }

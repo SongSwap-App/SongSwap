@@ -2,9 +2,10 @@
 
 namespace SongSwap_React_app.Models
 {
-    public class SongResponse
+    [Serializable]
+    public class PlaylistsResponse
     {
         [JsonPropertyName("results")]
-        public List<Track> Songs { get; set; } = new List<Track>();
+        public List<Playlist> Playlists { get; set; } = new List<Playlist>();
     }
 }

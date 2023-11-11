@@ -2,7 +2,7 @@
 
 namespace SongSwap_React_app.Models
 {
-    public class Song
+    public class Track
     {
         [JsonPropertyName("id")]
         public string Id { get; set; } = null!;
