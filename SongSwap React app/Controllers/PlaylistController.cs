@@ -15,20 +15,21 @@ namespace SongSwap_React_app.Controllers
     public class PlaylistController : ControllerBase
     {
         private readonly AuthenticationService _authenticationService;
+        private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<PlaylistController> _logger;
 
-        public PlaylistController(ILogger<PlaylistController> logger, AuthenticationService authenticationService)
+        public PlaylistController(ILogger<PlaylistController> logger, AuthenticationService authenticationService, IHttpClientFactory httpClientFactory)
         {
             _logger = logger;
             _authenticationService = authenticationService;
+            _httpClientFactory = httpClientFactory;
         }
 
         [HttpGet("{userId}")]
         public async Task<IActionResult> GetPlaylistsByUserUUID(string userId)
         {
-            var client = new HttpClient();
+            var client = _httpClientFactory.CreateClient();
             var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.musicapi.com/api/{userId}/playlists");
-            request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Authorization", "Basic " + _authenticationService.GetBasic64Authentication());
             var response = await client.SendAsync(request);
             if (response.IsSuccessStatusCode)
