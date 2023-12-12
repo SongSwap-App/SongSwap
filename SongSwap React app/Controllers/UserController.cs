@@ -12,18 +12,19 @@ namespace SongSwap_React_app.Controllers
     public class UserController : ControllerBase
     {
         private readonly AuthenticationService _authenticationService;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public UserController(AuthenticationService authenticationService)
+        public UserController(AuthenticationService authenticationService, IHttpClientFactory httpClientFactory)
         {
             _authenticationService = authenticationService;
+            _httpClientFactory = httpClientFactory;
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUserData(string id)
         {
-            var client = new HttpClient();
+            var client = _httpClientFactory.CreateClient();
             var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.musicapi.com/api/{id}/users/profile");
-            request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Authorization", "Basic " + _authenticationService.GetBasic64Authentication());
             var response = await client.SendAsync(request);
             if (response.IsSuccessStatusCode) 
