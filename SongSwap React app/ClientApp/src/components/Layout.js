@@ -5,13 +5,15 @@ const Layout = ({ children }) => {
     return (
         <div>
             <header>
-                <img src="SongSwap_Logo.jpg" alt="logo" className="logo" />
+                <a href="https://localhost:44418/">
+                    <img src="SongSwap_Logo.jpg" alt="logo" className="logo" />
+                </a>
             </header>
             <main>
                 {children}
             </main>
             <footer>
-                <a href="https://github.com/Oordii/SongSwap" target="_blank">GitHub</a>
+                <a href="https://github.com/Oordii/SongSwap">GitHub</a>
             </footer>
         </div>
     );

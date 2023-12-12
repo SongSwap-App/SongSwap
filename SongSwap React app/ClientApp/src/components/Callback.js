@@ -15,7 +15,13 @@ function Callback() {
                 const parsedData = JSON.parse(decodedData);
 
                 if (parsedData.authModel.status === 'success') {
-                    navigate(`/${parsedData.integrationUserUUID}`);
+                    // Pass state along with navigation
+                    navigate(`/`, {
+                        props: {
+                            uuid: parsedData.authModel.uuid,
+                            integrationType: parsedData.integration.type,
+                        },
+                    });
                 } else {
                     alert('Something went wrong');
                     navigate('/');
