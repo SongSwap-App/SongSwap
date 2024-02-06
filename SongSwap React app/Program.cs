@@ -4,7 +4,7 @@ using SongSwap_React_app.Startup;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddScoped<AuthenticationService>();
+builder.Services.AddScoped<AuthorizationService>();
 builder.Services.AddCofiguredHttpClient();
 builder.Services.AddControllersWithViews();
 builder.Services.AddEndpointsApiExplorer();
@@ -14,12 +14,14 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowSpecificOrigin",
         builder => builder.WithOrigins("https://localhost:44418")
         .SetIsOriginAllowedToAllowWildcardSubdomains()// Add the origin(s) that you want to allow.
+        .AllowCredentials()
         .AllowAnyHeader()
-        .AllowAnyMethod());
+        .AllowAnyMethod()
+        );
 });
 
-
 var app = builder.Build();
+
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -30,6 +32,7 @@ if (!app.Environment.IsDevelopment())
 
 if(app.Environment.IsDevelopment())
 {
+
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
@@ -46,6 +49,6 @@ app.MapControllerRoute(
     name: "default",
     pattern: "api/{controller}/{action=Index}/{id?}");
 
-app.MapFallbackToFile("index.html"); ;
+app.MapFallbackToFile("index.html");
 
 app.Run();

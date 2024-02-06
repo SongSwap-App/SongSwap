@@ -1,21 +1,15 @@
-﻿{
-  "iisSettings": {
-    "windowsAuthentication": false,
-    "anonymousAuthentication": true,
-    "iisExpress": {
-      "applicationUrl": "http://localhost:25771",
-      "sslPort": 44377
-    }
-  },
+{
   "profiles": {
     "SongSwap_React_app": {
       "commandName": "Project",
       "launchBrowser": true,
-      "applicationUrl": "https://localhost:7089;http://localhost:5176",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_HOSTINGSTARTUPASSEMBLIES": "Microsoft.AspNetCore.SpaProxy"
-      }
+        "ASPNETCORE_HOSTINGSTARTUPASSEMBLIES": "Microsoft.AspNetCore.SpaProxy",
+        "MusicApi_ClientId": "1e4e570d-4ce8-4d99-8b03-0dd6491a38f3",
+        "MusicApi_ClientSecret": "6d726eaa-7a89-4cec-b55b-fdf24564e3a2"
+      },
+      "applicationUrl": "https://localhost:7089;http://localhost:5176"
     },
     "IIS Express": {
       "commandName": "IISExpress",
@@ -24,6 +18,24 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_HOSTINGSTARTUPASSEMBLIES": "Microsoft.AspNetCore.SpaProxy"
       }
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "launchBrowser": true,
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
+      "environmentVariables": {
+        "ASPNETCORE_URLS": "https://+:443;http://+:80"
+      },
+      "publishAllPorts": true,
+      "useSSL": true
+    }
+  },
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:25771",
+      "sslPort": 44377
     }
   }
 }

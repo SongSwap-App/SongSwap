@@ -1,0 +1,38 @@
+﻿
+.playlist {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    background-color: #C3C2C2;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.col- button {
+    height: 60px;
+}
+
+.container h1 {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+#totalItems {
+    margin-right: 15px
+}
+
+.spinner-div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.selected-platforms {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-evenly;
+    margin-bottom: 15px;
+}

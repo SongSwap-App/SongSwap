@@ -1,18 +1,33 @@
-import React, { Component } from 'react';
-import Layout from './Layout'; 
+import React from 'react';
+import { useUser } from './UserContext';
+import { Link } from 'react-router-dom';
+import './Homepage.css';
+import PlatformSelector from './PlatformSelector';
 
-export default class HomePage extends Component {
-  static displayName = HomePage.name;
+const HomePage = () => {
+    const { user, logoutUser } = useUser();
 
-    render() { 
-    return (
-        <Layout>
-          <div>
-                <a href="https://app.musicapi.com/songswap?returnUrl=https://localhost:44418/callback">
-                    <button>Select a source of playlists</button>
-                </a>
-          </div>
-        </Layout>
-    );
-  }
-}
+    let contents;
+
+    if (user) {
+        contents =
+            <div className="home">
+                <Link to='/playlist'>
+                    <button type="button" className="btn btn-primary">
+                        Go back to started session
+                    </button>
+                </Link>
+                <PlatformSelector newImport={true}/>
+            </div>
+    } else {
+        contents =
+            <div className="home">
+                <h1>Import your playlists to any music platform</h1>
+                <PlatformSelector newImport={false}/>
+            </div>
+    }
+
+    return (contents);
+};
+
+export default HomePage;
