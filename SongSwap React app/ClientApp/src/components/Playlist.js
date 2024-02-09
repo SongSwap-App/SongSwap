@@ -1,62 +1,96 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
+import Spinner from 'react-bootstrap/Spinner';
+import PlaylistImport from './PlaylistImport';
+import { useUser } from './UserContext';
+import './Playlist.css';
 
-export class Playlist extends Component {
-    static displayName = Playlist.name;
+const PlaylistPage = () => {
+    const [playlists, setPlaylists] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const { user, loginUser } = useUser();
+    
 
-    constructor(props) {
-        super(props);
-        this.state = { playlist: null, loading: true };
-    }
+    useEffect(() => {
+        loginUser();
+        const populatePlaylistData = async () => {
+            try {
+                console.log("Fetching playlist data");
+                const response = await fetch('https://localhost:7089/api/playlist', {
+                    method: "GET",
+                    credentials: 'include',
+                });
 
-    componentDidMount() {
-        this.populatePlaylistData();
-    }
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
 
-    static renderPlaylist(playlist) {
-        return (
-            <div>
-                <h3>Name: {playlist.name}</h3>
-                <p>ID: {playlist.id}</p>
-                <p>Total Items: {playlist.totalItems}</p>
-                <p>Is Owner: {playlist.isOwner ? 'Yes' : 'No'}</p>
-            </div>
-        );
-    }
-
-    render() {
-        let contents;
-        if (this.state.loading) {
-            contents = <p><em>Loading...</em></p>;
-        } else if (this.state.playlist) {
-            contents = Playlist.renderPlaylist(this.state.playlist);
-        } else {
-            contents = <p>Data not available.</p>;
-        }
-
-
-        return (
-            <div>
-                <h1>Playlist Data</h1>
-                <p>This component demonstrates fetching playlist data from the server.</p>
-                {contents}
-            </div>
-        );
-    }
-
-    async populatePlaylistData() {
-        try {
-            console.log("fecthing data");
-            const response = await fetch('https://localhost:7089/api/playlist');
-            console.log(response);
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
+                const data = await response.json();
+                setPlaylists(data);
+                setLoading(false);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                setLoading(false);
             }
-            const data = await response.json();
-            console.log(data);
-            this.setState({ playlist: data, loading: false });
-        } catch (error) {
-            console.error('Error fetching data:', error);
-            this.setState({ loading: false });
+        };
+
+        populatePlaylistData();
+    }, []);
+
+    const renderPlaylist = (playlists) => {
+        const playlistsItems = playlists.map(playlist =>
+            <div className="row" key={playlist.id}>
+                <PlaylistImport playlist={ playlist } />
+            </div>
+        );
+
+        return <div className="container">{playlistsItems}</div>;
+    };
+
+    const contents = () => {
+
+        if (loading) {
+            return (<div className="spinner-div">
+                        <Spinner animation="border" role="output">
+                            <span className="visually-hidden">Loading...</span>
+                        </Spinner>
+                    </div>);
+        } else if (!loading && !playlists) {
+            return (<h1>Something went wrong, go back to homepage</h1>);
+        }
+
+        const content = renderPlaylist(playlists);
+
+        return (content);
+    }
+
+    const selectedPlatforms = () => {
+        if (!user) {
+            return (<div className="selected-platforms">
+                <div className="spinner-div">
+                    <Spinner animation="border" role="output">
+                        <span className="visually-hidden">Loading...</span>
+                    </Spinner>
+                </div>)
+            </div>);
+        } else {
+            return (<div className="selected-platforms">
+                <img alt={user.source} src={`${user.source}_logo.png`} className={`platform-logo-${user.source}`} />
+                <div className="arrow">
+                    <img alt="arrow" src="arrow.png" className="arrow" />
+                </div>
+                <img alt={user.destination} src={`${user.destination}_logo.png`} className={`platform-logo-${user.destination}`} />
+            </div>);
         }
     }
-}
+
+    
+    return (
+        <div className="container">
+            <h1>Your playlists</h1>
+            { selectedPlatforms() }
+            { contents()  }
+        </div>
+    );
+};
+
+export default PlaylistPage;

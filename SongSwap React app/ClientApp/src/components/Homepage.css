@@ -1,0 +1,96 @@
+﻿.home {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.home > a {
+    margin-bottom: 15px;
+    border: none;
+}
+
+.home h1 {
+    text-align: center;
+    margin-top: 15px;
+    margin-bottom: 35px;
+}
+
+.container {
+    display: flex;
+    background-color: #D3D3D3;
+    border-radius: 20px;
+    flex-direction: column;
+    padding: 10px;
+}
+
+.selector {
+    display: flex;
+    flex-direction: row;
+}
+
+.arrow {
+    display: flex;
+    align-items: center;
+}
+
+.arrow img {
+    width: 80px;
+    margin: 10px;
+}
+
+.container button {
+    margin: 6px;
+}
+
+
+.platforms {
+    display: flex;
+    flex-direction: column;
+    background-color: #E6E6E6;
+    margin-bottom: 15px;
+}
+
+.platforms > div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 60px;
+}
+
+.platforms h2 {
+    background-color: #A4B0BB;
+    border-radius: 10px;
+    width: 100px;
+    text-align: center;
+}
+
+.btn {
+    font-weight: bold;
+    height: 65px;
+    width: auto;
+    background-color: #C3C2C2;
+}
+
+.btn.active {
+    background-color: #D9D6D6;
+    border-color: lightslategrey;
+}
+
+.btn:hover {
+    background-color: #D9D6D6;
+}
+
+.platform-logo-youtube {
+    height: 40px;
+    width: auto;
+}
+
+.platform-logo-spotify {
+    height: 55px;
+    width: auto;
+}
+
+.platform-logo-apple {
+    height: 40px;
+    width: auto;
+}
