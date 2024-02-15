@@ -25,7 +25,6 @@ namespace SongSwap_React_app.Controllers
         }
 
         [HttpGet()]
-        [EnableLogging]
         public async Task<IActionResult> GetUserData()
         {
             Request.Cookies.TryGetValue("SourceIntegrationId", out string? integrationId);
@@ -73,7 +72,6 @@ namespace SongSwap_React_app.Controllers
         }
 
         [HttpGet("callback/source")]
-        [EnableLogging]
         public IActionResult Callback(string data64, string dest)
         {
             if (string.IsNullOrEmpty(data64))
@@ -93,7 +91,6 @@ namespace SongSwap_React_app.Controllers
         }
 
         [HttpGet("callback/destination")]
-        [EnableLogging]
         public IActionResult CallbackDestination(string data64)
         {
             if (string.IsNullOrEmpty(data64))

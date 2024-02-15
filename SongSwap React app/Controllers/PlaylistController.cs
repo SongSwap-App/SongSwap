@@ -25,7 +25,6 @@ namespace SongSwap_React_app.Controllers
             _httpClientFactory = httpClientFactory;
         }
 
-        //Take userId from cookies
         [HttpGet()]
         public async Task<IActionResult> GetPlaylistsByUserUUID()
         {
@@ -61,7 +60,6 @@ namespace SongSwap_React_app.Controllers
         }
 
         [HttpGet("{playlistId}")]
-        [EnableLogging]
         public async Task<IActionResult> GetPlaylistItems(string playlistId)
         {
             Request.Cookies.TryGetValue("SourceIntegrationId", out string? userId);

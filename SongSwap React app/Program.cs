@@ -1,5 +1,6 @@
 using SongSwap_React_app.Models.Services;
 using SongSwap_React_app.Startup;
+using Startup;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,6 +45,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseCors();
+app.UseLogging();
 
 app.MapControllerRoute(
     name: "default",
