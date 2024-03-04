@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Cors;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SongSwap_React_app.Infrastructure;
 using SongSwap_React_app.Models;
 using SongSwap_React_app.Models.Services;
 using System.Buffers.Text;
+using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -14,6 +16,7 @@ namespace SongSwap_React_app.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [EnableCors("AllowSpecificOrigin")]
+    [Authorize]
     public class PlaylistController : ControllerBase
     {
         private readonly AuthorizationService _authorizationService;
@@ -25,14 +28,15 @@ namespace SongSwap_React_app.Controllers
             _httpClientFactory = httpClientFactory;
         }
 
+
         [HttpGet()]
-        public async Task<IActionResult> GetPlaylistsByUserUUID()
+        public async Task<IActionResult> GetPlaylists()
         {
-            Request.Cookies.TryGetValue("SourceIntegrationId", out string? userId);
+            string? userId = User.FindFirstValue("SourceIntegrationId");
             if (string.IsNullOrEmpty(userId))
             {
-                Console.WriteLine("Couldn`t get value from cookies");
-                return BadRequest("Couldn`t get value from cookies");
+                Console.WriteLine("Couldn`t get value from token");
+                return BadRequest("Couldn`t get value from token");
             }
             var client = _httpClientFactory.CreateClient();
             var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.musicapi.com/api/{userId}/playlists");
@@ -62,7 +66,7 @@ namespace SongSwap_React_app.Controllers
         [HttpGet("{playlistId}")]
         public async Task<IActionResult> GetPlaylistItems(string playlistId)
         {
-            Request.Cookies.TryGetValue("SourceIntegrationId", out string? userId);
+            string? userId = User.FindFirstValue("SourceIntegrationId");
             var client = new HttpClient();
             client.DefaultRequestHeaders.Add("Accept", "application/json");
             client.DefaultRequestHeaders.Add("Authorization", "Basic " + _authorizationService.GetBasic64Authentication());
@@ -82,10 +86,10 @@ namespace SongSwap_React_app.Controllers
         }
 
         [HttpPost("import/{playlistId}")]
-        public async Task<IActionResult> CreatePlaylist(string playlistId)
+        public async Task<IActionResult> ImportPlaylist(string playlistId)
         {
-            Request.Cookies.TryGetValue("SourceIntegrationId", out string? sourceId);
-            Request.Cookies.TryGetValue("DestIntegrationId", out string? destinationId);
+            string? sourceId = User.FindFirstValue("SourceIntegrationId");
+            string? destinationId = User.FindFirstValue("DestIntegrationId");
 
             if (string.IsNullOrEmpty(sourceId) || string.IsNullOrEmpty(destinationId))
             {
@@ -119,11 +123,11 @@ namespace SongSwap_React_app.Controllers
                 searchRequest.Options.Set(new HttpRequestOptionsKey<int>("limitParam"), 1);
                 var searchRequestBody = new List<KeyValuePair<string, string>>()
                 {
-                    new KeyValuePair<string, string>("type", "track"),
-                    new KeyValuePair<string, string>("track", item.Name),
-                    new KeyValuePair<string, string>("artist", string.Empty),
-                    new KeyValuePair<string, string>("album", string.Empty),
-                    new KeyValuePair<string, string>("isrc", string.Empty)
+                    new("type", "track"),
+                    new("track", item.Name),
+                    new("artist", string.Empty),
+                    new("album", string.Empty),
+                    new("isrc", string.Empty)
                 };
                 searchRequest.Content = new FormUrlEncodedContent(searchRequestBody);
 
@@ -144,7 +148,7 @@ namespace SongSwap_React_app.Controllers
             var createRequest = new HttpRequestMessage(HttpMethod.Post, $"https://api.musicapi.com/api/{destinationId}/playlists");
             var createRequestBody = new List<KeyValuePair<string, string>>
             {
-                new KeyValuePair<string, string>("name", name)
+                new("name", name)
             };
             createRequest.Content = new FormUrlEncodedContent(createRequestBody);
             var createResponse = await client.SendAsync(createRequest);

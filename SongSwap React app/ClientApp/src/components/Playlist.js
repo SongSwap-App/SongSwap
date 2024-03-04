@@ -7,7 +7,7 @@ import './Playlist.css';
 const PlaylistPage = () => {
     const [playlists, setPlaylists] = useState(null);
     const [loading, setLoading] = useState(true);
-    const { user, loginUser } = useUser();
+    const { user, token, loginUser } = useUser();
     
 
     useEffect(() => {
@@ -15,9 +15,15 @@ const PlaylistPage = () => {
         const populatePlaylistData = async () => {
             try {
                 console.log("Fetching playlist data");
-                const response = await fetch('https://localhost:7089/api/playlist', {
+                console.log(`Fetching ${process.env.REACT_APP_SERVER_HOST_URL}`)
+                const response = await fetch(`${process.env.REACT_APP_SERVER_HOST_URL}/api/playlist`, {
                     method: "GET",
                     credentials: 'include',
+                    headers: {
+                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+                        'Authorization': `Bearer ${token}`
+                    },
                 });
 
                 if (!response.ok) {

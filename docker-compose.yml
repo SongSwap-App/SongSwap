@@ -1,0 +1,49 @@
+version: '3.4'
+
+services:
+  songswap-ui:
+    container_name: songswap-ui
+    image: ${DOCKER_REGISTRY-}songswap-ui
+    networks: 
+      - songswap-network
+    ports:
+      - "3000:80"
+    build:
+      context: .
+      dockerfile: SongSwap React app/ClientApp/Dockerfile
+  songswap:
+    container_name: songswap
+    image: ${DOCKER_REGISTRY-}songswap
+    networks: 
+      - songswap-network
+    ports:
+      - "5000:443"
+      - "5001:80" 
+    build:
+      context: .
+      dockerfile: SongSwap React app/Dockerfile
+    secrets:
+      - MusicApi_ClientId
+      - MusicApi_ClientSecret
+  loggingapp:
+    container_name: loggingapp
+    image: ${DOCKER_REGISTRY-}loggingapp
+    networks: 
+      - songswap-network
+    ports:
+      - "5050:443"
+      - "5051:80" 
+    build:
+      context: .
+      dockerfile: LoggingApp/Dockerfile
+
+networks:
+  songswap-network:
+    driver: bridge  
+
+secrets:
+  MusicApi_ClientId:
+    file: C:\Users\kvand\MusicApi_ClientId.txt
+  MusicApi_ClientSecret:
+    file: C:\Users\kvand\MusicApi_ClientSecret.txt
+  

@@ -5,6 +5,10 @@ VisualStudioVersion = 17.7.34024.191
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SongSwap", "SongSwap React app\SongSwap.csproj", "{E8BEEC5E-6530-4C27-978E-7CC389DA9579}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LoggingApp", "LoggingApp\LoggingApp.csproj", "{D8AB41E5-F3B3-4BBD-A8F3-5B703C3D3487}"
+EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{8284E996-5FFE-4A08-88CC-C79AB90C10EE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{E8BEEC5E-6530-4C27-978E-7CC389DA9579}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E8BEEC5E-6530-4C27-978E-7CC389DA9579}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E8BEEC5E-6530-4C27-978E-7CC389DA9579}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8AB41E5-F3B3-4BBD-A8F3-5B703C3D3487}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8AB41E5-F3B3-4BBD-A8F3-5B703C3D3487}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8AB41E5-F3B3-4BBD-A8F3-5B703C3D3487}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8AB41E5-F3B3-4BBD-A8F3-5B703C3D3487}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8284E996-5FFE-4A08-88CC-C79AB90C10EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8284E996-5FFE-4A08-88CC-C79AB90C10EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8284E996-5FFE-4A08-88CC-C79AB90C10EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8284E996-5FFE-4A08-88CC-C79AB90C10EE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,4 +1,4 @@
-﻿namespace SongSwap_React_app.Infrastructure
+﻿namespace LoggingApp.Infrastructure
 {
     public class ActionLog
     {

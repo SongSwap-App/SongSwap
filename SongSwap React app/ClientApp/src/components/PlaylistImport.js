@@ -8,14 +8,16 @@ import { useUser } from './UserContext'
 const PlaylistImport = ({ playlist }) => {
     const [loading, setLoading] = useState(true);
     const [tracks, setTracks] = useState(null);
-    const { user } = useUser();
+    const { user, token } = useUser();
 
     const importPlaylist = async () => {
         try {
             console.log("Importing playlist");
-            const response = await fetch(`https://localhost:7089/api/playlist/import/${encodeURIComponent(playlist.id)}`, {
+            const response = await fetch(`${process.env.REACT_APP_SERVER_HOST_URL}/api/playlist/import/${encodeURIComponent(playlist.id)}`, {
                 method: "POST",
-                credentials: 'include',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             });
 
             if (!response.ok) {
@@ -38,9 +40,11 @@ const PlaylistImport = ({ playlist }) => {
         if (!tracks && loading) {
             try {
                 console.log("Fetching track list");
-                const response = await fetch(`https://localhost:7089/api/playlist/${encodeURIComponent(playlist.id)}`, {
+                const response = await fetch(`/api/playlist/${encodeURIComponent(playlist.id)}`, {
                     method: "GET",
-                    credentials: 'include'
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
                 });
 
                 if (!response.ok) {
@@ -80,7 +84,7 @@ const PlaylistImport = ({ playlist }) => {
     return (
         <div >
             <div className="playlist">
-                <button onClick={ toggleShowHideTracks }>Tracks</button>
+                <button className="btn btn-primary" onClick={ toggleShowHideTracks }>Tracks</button>
                 <div className="col-md">
                     <h5>{playlist.name}</h5>
                 </div>
