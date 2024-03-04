@@ -28,25 +28,6 @@ namespace SongSwap_React_app.Controllers
             _httpClientFactory = httpClientFactory;
         }
 
-        [HttpGet("jwt")]
-        public IActionResult TestJwt()
-        {
-            var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("superSecretKey@345ssdssssdsdssdsdsds"));
-            var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
-            var tokeOptions = new JwtSecurityToken(
-                issuer: "https://localhost:5000",
-                audience: "http://localhost:3000",
-                claims: new List<Claim>()
-                {
-                    new("User", "Test")
-                },
-                signingCredentials: signinCredentials
-            );
-            var tokenString = new JwtSecurityTokenHandler().WriteToken(tokeOptions);
-            Console.WriteLine(tokenString);
-            return Ok(tokenString);
-        }
-
 
         [HttpGet()]
         [Authorize]
@@ -86,6 +67,7 @@ namespace SongSwap_React_app.Controllers
         }
 
         [HttpPost("logout")]
+        [Authorize]
         public IActionResult LogOut()
         {
             var ck = Request.Cookies.Keys;
@@ -150,7 +132,7 @@ namespace SongSwap_React_app.Controllers
                     new("DestIntegrationId", node["integrationUserUUID"]!.ToString())
                 },
                 signingCredentials: signinCredentials,
-                expires: DateTime.UtcNow.AddHours(2)
+                expires: DateTime.Now.AddHours(2)
             );
             var tokenString = new JwtSecurityTokenHandler().WriteToken(tokeOptions);
 

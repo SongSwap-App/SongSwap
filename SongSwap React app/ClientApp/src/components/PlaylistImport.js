@@ -12,8 +12,7 @@ const PlaylistImport = ({ playlist }) => {
 
     const importPlaylist = async () => {
         try {
-            console.log("Importing playlist");
-            const response = await fetch(`${process.env.REACT_APP_SERVER_HOST_URL}/api/playlist/import/${encodeURIComponent(playlist.id)}`, {
+            const response = await fetch(`/api/playlist/import/${encodeURIComponent(playlist.id)}`, {
                 method: "POST",
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -39,7 +38,6 @@ const PlaylistImport = ({ playlist }) => {
         }
         if (!tracks && loading) {
             try {
-                console.log("Fetching track list");
                 const response = await fetch(`/api/playlist/${encodeURIComponent(playlist.id)}`, {
                     method: "GET",
                     headers: {

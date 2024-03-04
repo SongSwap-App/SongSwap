@@ -9,7 +9,6 @@ export const UserProvider = ({ children }) => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Save token and user data to localStorage
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
     }, [token, user]);
@@ -20,12 +19,9 @@ export const UserProvider = ({ children }) => {
 
     const loginUser = useCallback(async () => {
         try {
-            console.log("Fetching user data");
-            const response = await fetch(`${process.env.REACT_APP_SERVER_HOST_URL}/api/user`, {
+            const response = await fetch(`/api/user`, {
                 method: "GET",
                 headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
                     'Authorization': `Bearer ${token}`
                 }
             });
@@ -44,15 +40,16 @@ export const UserProvider = ({ children }) => {
     }, [navigate, token]);
 
     const logoutUser = useCallback(async () => {
-        console.log("logging out");
-        fetch(`${process.env.REACT_APP_SERVER_HOST_URL}/api/user/logout`, {
+        fetch(`/api/user/logout`, {
             method: "POST",
-            credentials: 'include'
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
         });
         setUser(null);
         setToken('');
         navigate('/');
-    }, [navigate]);
+    }, [navigate, token]);
 
     const contextValue = useMemo(() => ({ user, loginUser, logoutUser, token, setWebToken }), [user, loginUser, logoutUser, token, setWebToken]);
 

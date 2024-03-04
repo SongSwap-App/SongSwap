@@ -21,6 +21,7 @@ namespace SongSwap_React_app.Controllers
     {
         private readonly AuthorizationService _authorizationService;
         private readonly IHttpClientFactory _httpClientFactory;
+        private const string musicapi_url = "https://api.musicapi.com/api";
 
         public PlaylistController(AuthorizationService authorizationService, IHttpClientFactory httpClientFactory)
         {
@@ -39,7 +40,7 @@ namespace SongSwap_React_app.Controllers
                 return BadRequest("Couldn`t get value from token");
             }
             var client = _httpClientFactory.CreateClient();
-            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.musicapi.com/api/{userId}/playlists");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{musicapi_url}/{userId}/playlists");
             request.Headers.Add("Authorization", "Basic " + _authorizationService.GetBasic64Authentication());
             var response = await client.SendAsync(request);
 
@@ -70,13 +71,13 @@ namespace SongSwap_React_app.Controllers
             var client = new HttpClient();
             client.DefaultRequestHeaders.Add("Accept", "application/json");
             client.DefaultRequestHeaders.Add("Authorization", "Basic " + _authorizationService.GetBasic64Authentication());
-            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.musicapi.com/api/{userId}/playlists/{playlistId}/items");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{musicapi_url}/{userId}/playlists/{playlistId}/items");
             var response = await client.SendAsync(request);
 
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
-                var items = JsonSerializer.Deserialize<SearchResponse>(content);
+                var items = JsonSerializer.Deserialize<PlaylistItemsResponse>(content);
                 return Ok(items!.Items);
             }
             else 
@@ -100,10 +101,10 @@ namespace SongSwap_React_app.Controllers
             client.DefaultRequestHeaders.Add("Accept", "application/json");
             client.DefaultRequestHeaders.Add("Authorization", "Basic " + _authorizationService.GetBasic64Authentication());
 
-            var sourceRequest = new HttpRequestMessage(HttpMethod.Get, $"https://api.musicapi.com/api/{sourceId}/playlists/{playlistId}/items");
+            var sourceRequest = new HttpRequestMessage(HttpMethod.Get, $"{musicapi_url}/{sourceId}/playlists/{playlistId}/items");
             var sourceResponce = await client.SendAsync(sourceRequest);
             var sourceContent = await sourceResponce.Content.ReadAsStringAsync();
-            var source = JsonSerializer.Deserialize<SearchResponse>(sourceContent);
+            var source = JsonSerializer.Deserialize<PlaylistItemsResponse>(sourceContent);
 
             if (source == null)
             {
@@ -111,7 +112,7 @@ namespace SongSwap_React_app.Controllers
             }
 
 
-            var nameRequest = new HttpRequestMessage(HttpMethod.Get, $"https://api.musicapi.com/api/{sourceId}/playlists/{playlistId}");
+            var nameRequest = new HttpRequestMessage(HttpMethod.Get, $"{musicapi_url}/{sourceId}/playlists/{playlistId}");
             var nameResponce = await client.SendAsync(nameRequest);
             var name = JsonNode.Parse(await nameResponce.Content.ReadAsStringAsync())!["name"]!.ToString();
 
@@ -119,22 +120,23 @@ namespace SongSwap_React_app.Controllers
 
             foreach (var item in source.Items)
             {
-                var searchRequest = new HttpRequestMessage(HttpMethod.Post, $"https://api.musicapi.com/api/{destinationId}/search");
+                var artist = item.Artists?.FirstOrDefault()?.Name;
+                var searchRequest = new HttpRequestMessage(HttpMethod.Post, $"{musicapi_url}/{destinationId}/search");
                 searchRequest.Options.Set(new HttpRequestOptionsKey<int>("limitParam"), 1);
                 var searchRequestBody = new List<KeyValuePair<string, string>>()
                 {
                     new("type", "track"),
                     new("track", item.Name),
-                    new("artist", string.Empty),
+                    new("artist", artist ?? string.Empty),
                     new("album", string.Empty),
-                    new("isrc", string.Empty)
+                    new("isrc", item.Isrc ?? string.Empty)
                 };
                 searchRequest.Content = new FormUrlEncodedContent(searchRequestBody);
 
                 var searchResponce = await client.SendAsync(searchRequest);
 
                 var content = await searchResponce.Content.ReadAsStringAsync();
-                var searchResult = JsonSerializer.Deserialize<SearchResponse>(content);
+                var searchResult = JsonSerializer.Deserialize<PlaylistItemsResponse>(content);
 
                 if (searchResult == null)
                 {
@@ -143,9 +145,8 @@ namespace SongSwap_React_app.Controllers
 
                 itemIds.Add(searchResult.Items[0].Id);
             }
-            Console.WriteLine(itemIds.Count);
 
-            var createRequest = new HttpRequestMessage(HttpMethod.Post, $"https://api.musicapi.com/api/{destinationId}/playlists");
+            var createRequest = new HttpRequestMessage(HttpMethod.Post, $"{musicapi_url}/{destinationId}/playlists");
             var createRequestBody = new List<KeyValuePair<string, string>>
             {
                 new("name", name)
@@ -156,7 +157,7 @@ namespace SongSwap_React_app.Controllers
             var createResponseBody = await createResponse.Content.ReadAsStringAsync();
             var newPlaylist = JsonSerializer.Deserialize<Playlist>(createResponseBody);
 
-            var populateRequest = new HttpRequestMessage(HttpMethod.Post, $"https://api.musicapi.com/api/{destinationId}/playlists/{newPlaylist!.Id}/items");
+            var populateRequest = new HttpRequestMessage(HttpMethod.Post, $"{musicapi_url}/{destinationId}/playlists/{newPlaylist!.Id}/items");
             var populateRequestBody = new List<KeyValuePair<string, string>>();
 
             foreach (var itemId in itemIds)

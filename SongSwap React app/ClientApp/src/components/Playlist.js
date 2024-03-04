@@ -14,14 +14,9 @@ const PlaylistPage = () => {
         loginUser();
         const populatePlaylistData = async () => {
             try {
-                console.log("Fetching playlist data");
-                console.log(`Fetching ${process.env.REACT_APP_SERVER_HOST_URL}`)
-                const response = await fetch(`${process.env.REACT_APP_SERVER_HOST_URL}/api/playlist`, {
+                const response = await fetch(`/api/playlist`, {
                     method: "GET",
-                    credentials: 'include',
                     headers: {
-                        'Access-Control-Allow-Origin': '*',
-                        'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
                         'Authorization': `Bearer ${token}`
                     },
                 });
