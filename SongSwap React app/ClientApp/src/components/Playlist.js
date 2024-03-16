@@ -7,17 +7,18 @@ import './Playlist.css';
 const PlaylistPage = () => {
     const [playlists, setPlaylists] = useState(null);
     const [loading, setLoading] = useState(true);
-    const { user, loginUser } = useUser();
-    
+    const { user, token, loginUser } = useUser();
+
 
     useEffect(() => {
         loginUser();
         const populatePlaylistData = async () => {
             try {
-                console.log("Fetching playlist data");
-                const response = await fetch('https://localhost:7089/api/playlist', {
+                const response = await fetch(`/api/playlist`, {
                     method: "GET",
-                    credentials: 'include',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
                 });
 
                 if (!response.ok) {

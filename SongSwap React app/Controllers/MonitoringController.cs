@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SharedModels;
 using SongSwap_React_app.Infrastructure;
 
 namespace SongSwap_React_app.Controllers
@@ -8,10 +9,12 @@ namespace SongSwap_React_app.Controllers
     [ApiController]
     public class MonitoringController : ControllerBase
     {
-        public static List<Tuple<DateTime, string,double>> logs = new List<Tuple<DateTime, string, double>>();
+        private static readonly List<ActionLog> logs = new();
+
+        public static List<ActionLog> Logs { get => logs; }
 
         [HttpGet] 
-        public IActionResult Logs() 
+        public IActionResult GetLogs() 
         {
             return Ok(logs);
         }
@@ -19,7 +22,7 @@ namespace SongSwap_React_app.Controllers
         [HttpGet("heavy")]
         public IActionResult HeavyRequests() 
         {
-            return Ok(logs.OrderByDescending(l => l.Item3));
+            return Ok(logs.OrderByDescending(l => l.TimeElapsed));
         }
     }
 }

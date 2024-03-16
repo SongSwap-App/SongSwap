@@ -1,0 +1,83 @@
+version: '3.4'
+
+services:
+  songswap-ui:
+    container_name: songswap-ui
+    image: ${DOCKER_REGISTRY-}songswap-ui
+    networks: 
+      - songswap-network
+    ports:
+      - "3000:80"
+    build:
+      context: .
+      dockerfile: SongSwap React app/ClientApp/Dockerfile
+  songswap:
+    container_name: songswap
+    image: ${DOCKER_REGISTRY-}songswap
+    networks: 
+      - songswap-network
+    ports:
+      - "5000:443"
+      - "5001:80" 
+    build:
+      context: .
+      dockerfile: SongSwap React app/Dockerfile
+    secrets:
+      - MusicApi_ClientId
+      - MusicApi_ClientSecret
+  loggingapp:
+    container_name: loggingapp
+    image: ${DOCKER_REGISTRY-}loggingapp
+    networks: 
+      - songswap-network
+    ports:
+      - "5050:443"
+      - "5051:80" 
+    build:
+      context: .
+      dockerfile: LoggingApp/Dockerfile
+    depends_on:
+      - postgresql
+  rabbitmq: 
+    container_name: rabbitmq
+    image: rabbitmq:3-management
+    ports:
+     - "5672:5672"
+     - "15672:15672"
+    networks:
+      - songswap-network
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+  postgresql:
+    container_name: postgresql
+    image: postgres:16.2-alpine3.19
+    restart: always
+    shm_size: 128mb
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+      - type: tmpfs
+        target: /dev/shm
+        tmpfs:
+          size: 134217728
+    environment:
+      POSTGRES_DB: "songswapdb"
+      POSTGRES_USER: "songswapuser"
+      POSTGRES_PASSWORD: "songswap1231"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    ports:
+      - "5432:5432" 
+
+networks:
+  songswap-network:
+    driver: bridge  
+
+secrets:
+  MusicApi_ClientId:
+    file: C:\Users\kvand\MusicApi_ClientId.txt
+  MusicApi_ClientSecret:
+    file: C:\Users\kvand\MusicApi_ClientSecret.txt
+  
+volumes:
+  rabbitmq_data:
+    driver: local
+  postgresql_data:

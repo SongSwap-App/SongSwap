@@ -40,7 +40,7 @@ const PlatformSelector = ({ newImport }) => {
         }
 
         if (selectedFrom && selectedTo && selectedFrom !== selectedTo) {
-            window.location.href = `https://app.musicapi.com/songswap/${selectedFrom}/auth?returnUrl=https://localhost:7089/api/user/callback/source?dest=${selectedTo}`;
+            window.location.href = `https://app.musicapi.com/songswap/${selectedFrom}/auth?returnUrl=${process.env.REACT_APP_SERVER_HOST_URL}/api/user/callback/source?dest=${selectedTo}`;
         } else {
             alert('Please select valid source and destination platforms.');
         }

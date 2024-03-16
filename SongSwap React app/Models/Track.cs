@@ -9,5 +9,11 @@ namespace SongSwap_React_app.Models
 
         [JsonPropertyName("name")]
         public string Name { get; set; } = null!;
+
+        [JsonPropertyName("isrc")]
+        public string? Isrc { get; set; } = string.Empty;
+
+        [JsonPropertyName("artists")]
+        public Artist[] Artists { get; set; } = Array.Empty<Artist>();
     }
 }

@@ -5,7 +5,7 @@ import './Homepage.css';
 import PlatformSelector from './PlatformSelector';
 
 const HomePage = () => {
-    const { user, logoutUser } = useUser();
+    const { user } = useUser();
 
     let contents;
 

@@ -8,19 +8,19 @@ EXPOSE 443
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["SongSwap React app/SongSwap.csproj", "SongSwap React app/"]
-RUN dotnet restore "./SongSwap React app/SongSwap.csproj"
+COPY ["LoggingApp/LoggingApp.csproj", "LoggingApp/"]
+RUN dotnet restore "./LoggingApp/LoggingApp.csproj"
 COPY . .
-WORKDIR "/src/SongSwap React app"
-RUN dotnet build "./SongSwap.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/LoggingApp"
+RUN dotnet build "./LoggingApp.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-COPY ./songswap_ssl.pfx ./songswap_ssl.pfx
+COPY ./../songswap_ssl.pfx ./songswap_ssl.pfx
 RUN dotnet dev-certs https -ep ./songswap_ssl.pfx -p 411242
-RUN dotnet publish "./SongSwap.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./LoggingApp.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "SongSwap.dll"]
+ENTRYPOINT ["dotnet", "LoggingApp.dll"]
