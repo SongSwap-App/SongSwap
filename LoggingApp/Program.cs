@@ -1,9 +1,21 @@
+using LoggingApp.Infrastructure;
+using LoggingApp.Infrastructure.Data;
+using MassTransit;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddMassTransit(x => 
+{
+    x.AddConsumer<ActionLogDtoConsumer>();
 
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.ConfigureEndpoints(context);
+    });
+});
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddCors(options =>
@@ -16,6 +28,11 @@ builder.Services.AddCors(options =>
         .AllowAnyMethod()
         );
 });
+builder.Services.AddEntityFrameworkNpgsql()
+    .AddDbContext<LogsDbContext>(opt =>
+    {
+        opt.UseNpgsql(builder.Configuration.GetConnectionString("postgresql"));
+    });
 
 var app = builder.Build();
 
@@ -30,7 +47,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
+
 app.UseCors();
 app.UseRouting();
 

@@ -28,6 +28,34 @@ namespace SongSwap_React_app.Controllers
             _httpClientFactory = httpClientFactory;
         }
 
+        [HttpGet("jwt")]
+        public async Task<IActionResult> Jwt()
+        {
+            Request.Cookies.TryGetValue("SourceIntegrationId", out string? integrationId);
+            Request.Cookies.TryGetValue("SourcePlatform", out string? sourcePlatform);
+            Request.Cookies.TryGetValue("DestinationPlatform", out string? destPlatform);
+            Request.Cookies.TryGetValue("DestIntegrationId", out string? DestIntegrationId);
+
+            var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("superSecretKey@345ssdssssdsdssdsdsds"));
+            var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
+            var tokeOptions = new JwtSecurityToken(
+                issuer: "https://localhost:5000",
+                audience: "http://localhost:3000",
+                claims: new List<Claim>()
+                {
+                    new("SourceIntegrationId", integrationId),
+                    new("SourcePlatform", sourcePlatform),
+                    new("DestinationPlatform", destPlatform),
+                    new("DestIntegrationId", DestIntegrationId)
+                },
+                signingCredentials: signinCredentials,
+                expires: DateTime.Now.AddDays(30)
+            );
+
+            var tokenString = new JwtSecurityTokenHandler().WriteToken(tokeOptions);
+
+            return Redirect(homepage + "callback?token=" + tokenString);
+        }
 
         [HttpGet()]
         [Authorize]
@@ -132,8 +160,9 @@ namespace SongSwap_React_app.Controllers
                     new("DestIntegrationId", node["integrationUserUUID"]!.ToString())
                 },
                 signingCredentials: signinCredentials,
-                expires: DateTime.Now.AddHours(2)
+                expires: DateTime.Now.AddDays(30)
             );
+            
             var tokenString = new JwtSecurityTokenHandler().WriteToken(tokeOptions);
 
             return Redirect(homepage + "callback?token=" + tokenString);

@@ -1,5 +1,5 @@
-using LoggingApp.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
+using SharedModels;
 
 namespace LoggingApp.Controllers
 {
@@ -7,26 +7,22 @@ namespace LoggingApp.Controllers
     [Route("api/[controller]")]
     public class LoggingController : ControllerBase
     {
-        private readonly List<ActionLog> _logs;
+        private static readonly List<ActionLogDto> _logs = new();
 
         private readonly ILogger<LoggingController> _logger;
 
+        public static List<ActionLogDto> Logs { get => _logs; }
+
         public LoggingController(ILogger<LoggingController> logger)
         {
-            _logs = new List<ActionLog>();
             _logger = logger;
         }
 
-        [HttpGet("hello")]
-        public IActionResult Hello()
-        {
-            return Ok("Hello world!");
-        }
-
         [HttpPost()]
-        public IActionResult Log(ActionLog log) 
+        public IActionResult Log([FromBody] ActionLogDto log) 
         {
-            return Ok(log);
+            _logs.Add(log);
+            return Ok();
         }
 
         [HttpGet()]

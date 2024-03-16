@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SharedModels;
 using SongSwap_React_app.Infrastructure;
 
 namespace SongSwap_React_app.Controllers

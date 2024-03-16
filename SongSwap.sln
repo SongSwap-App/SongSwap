@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LoggingApp", "LoggingApp\Lo
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{8284E996-5FFE-4A08-88CC-C79AB90C10EE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedModels", "SharedModels\SharedModels.csproj", "{378985DA-1331-40DD-BCC1-13D4E772DA0D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{8284E996-5FFE-4A08-88CC-C79AB90C10EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8284E996-5FFE-4A08-88CC-C79AB90C10EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8284E996-5FFE-4A08-88CC-C79AB90C10EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{378985DA-1331-40DD-BCC1-13D4E772DA0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{378985DA-1331-40DD-BCC1-13D4E772DA0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{378985DA-1331-40DD-BCC1-13D4E772DA0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{378985DA-1331-40DD-BCC1-13D4E772DA0D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

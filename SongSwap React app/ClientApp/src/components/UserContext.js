@@ -17,28 +17,6 @@ export const UserProvider = ({ children }) => {
         setToken(webToken);
     }, []);
 
-    const loginUser = useCallback(async () => {
-        try {
-            const response = await fetch(`/api/user`, {
-                method: "GET",
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (response.status === 401) {
-                console.log("Unauthorized");
-                alert("Authorization required");
-                navigate('/');
-            }
-
-            const data = await response.json();
-            setUser(data);
-        } catch (error) {
-            console.log(error);
-        }
-    }, [navigate, token]);
-
     const logoutUser = useCallback(async () => {
         fetch(`/api/user/logout`, {
             method: "POST",
@@ -50,6 +28,29 @@ export const UserProvider = ({ children }) => {
         setToken('');
         navigate('/');
     }, [navigate, token]);
+
+    const loginUser = useCallback(async () => {
+        try {
+            const response = await fetch(`/api/user`, {
+                method: "GET",
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.status === 401) {
+                console.log("Unauthorized");
+                logoutUser();
+            }
+
+            const data = await response.json();
+            setUser(data);
+        } catch (error) {
+            console.log(error);
+        }
+    }, [token, logoutUser]);
+
+    
 
     const contextValue = useMemo(() => ({ user, loginUser, logoutUser, token, setWebToken }), [user, loginUser, logoutUser, token, setWebToken]);
 

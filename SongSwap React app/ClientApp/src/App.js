@@ -6,8 +6,8 @@ import Callback from './components/Callback';
 import { Layout } from './components/Layout';
 import { UserProvider } from './components/UserContext';
 
-export default function App() {
 
+export default function App() {
     return (
         <UserProvider>
             <Layout>

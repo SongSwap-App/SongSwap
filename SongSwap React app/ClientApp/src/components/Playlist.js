@@ -8,7 +8,7 @@ const PlaylistPage = () => {
     const [playlists, setPlaylists] = useState(null);
     const [loading, setLoading] = useState(true);
     const { user, token, loginUser } = useUser();
-    
+
 
     useEffect(() => {
         loginUser();

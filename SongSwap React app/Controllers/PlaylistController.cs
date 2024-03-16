@@ -2,10 +2,13 @@
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using SongSwap_React_app.Infrastructure;
 using SongSwap_React_app.Models;
 using SongSwap_React_app.Models.Services;
 using System.Buffers.Text;
+using System.Net;
+using System.Numerics;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -22,11 +25,13 @@ namespace SongSwap_React_app.Controllers
         private readonly AuthorizationService _authorizationService;
         private readonly IHttpClientFactory _httpClientFactory;
         private const string musicapi_url = "https://api.musicapi.com/api";
+        private readonly IHubContext<ProgressHub> _hub;
 
-        public PlaylistController(AuthorizationService authorizationService, IHttpClientFactory httpClientFactory)
+        public PlaylistController(AuthorizationService authorizationService, IHttpClientFactory httpClientFactory, IHubContext<ProgressHub> hub)
         {
             _authorizationService = authorizationService;
             _httpClientFactory = httpClientFactory;
+            _hub = hub;
         }
 
 
@@ -78,7 +83,7 @@ namespace SongSwap_React_app.Controllers
             {
                 var content = await response.Content.ReadAsStringAsync();
                 var items = JsonSerializer.Deserialize<PlaylistItemsResponse>(content);
-                return Ok(items!.Items);
+                return Ok(items!.Items);  
             }
             else 
             {
@@ -87,8 +92,10 @@ namespace SongSwap_React_app.Controllers
         }
 
         [HttpPost("import/{playlistId}")]
-        public async Task<IActionResult> ImportPlaylist(string playlistId)
+        public async Task<IActionResult> ImportPlaylist(string playlistId, CancellationToken cancellationToken)
         {
+            await _hub.Clients.All.SendAsync("ReceiveMessage", playlistId, new ProgressDto { Status = "started", Now = 0}, cancellationToken: cancellationToken);
+
             string? sourceId = User.FindFirstValue("SourceIntegrationId");
             string? destinationId = User.FindFirstValue("DestIntegrationId");
 
@@ -102,8 +109,8 @@ namespace SongSwap_React_app.Controllers
             client.DefaultRequestHeaders.Add("Authorization", "Basic " + _authorizationService.GetBasic64Authentication());
 
             var sourceRequest = new HttpRequestMessage(HttpMethod.Get, $"{musicapi_url}/{sourceId}/playlists/{playlistId}/items");
-            var sourceResponce = await client.SendAsync(sourceRequest);
-            var sourceContent = await sourceResponce.Content.ReadAsStringAsync();
+            var sourceResponce = await client.SendAsync(sourceRequest, cancellationToken);
+            var sourceContent = await sourceResponce.Content.ReadAsStringAsync(cancellationToken);
             var source = JsonSerializer.Deserialize<PlaylistItemsResponse>(sourceContent);
 
             if (source == null)
@@ -113,13 +120,15 @@ namespace SongSwap_React_app.Controllers
 
 
             var nameRequest = new HttpRequestMessage(HttpMethod.Get, $"{musicapi_url}/{sourceId}/playlists/{playlistId}");
-            var nameResponce = await client.SendAsync(nameRequest);
-            var name = JsonNode.Parse(await nameResponce.Content.ReadAsStringAsync())!["name"]!.ToString();
+            var nameResponce = await client.SendAsync(nameRequest, cancellationToken);
+            var name = JsonNode.Parse(await nameResponce.Content.ReadAsStringAsync(cancellationToken))!["name"]!.ToString();
 
             List<string> itemIds = new();
+            int count = 0;
 
             foreach (var item in source.Items)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var artist = item.Artists?.FirstOrDefault()?.Name;
                 var searchRequest = new HttpRequestMessage(HttpMethod.Post, $"{musicapi_url}/{destinationId}/search");
                 searchRequest.Options.Set(new HttpRequestOptionsKey<int>("limitParam"), 1);
@@ -133,9 +142,9 @@ namespace SongSwap_React_app.Controllers
                 };
                 searchRequest.Content = new FormUrlEncodedContent(searchRequestBody);
 
-                var searchResponce = await client.SendAsync(searchRequest);
+                var searchResponce = await client.SendAsync(searchRequest, cancellationToken);
 
-                var content = await searchResponce.Content.ReadAsStringAsync();
+                var content = await searchResponce.Content.ReadAsStringAsync(cancellationToken);
                 var searchResult = JsonSerializer.Deserialize<PlaylistItemsResponse>(content);
 
                 if (searchResult == null)
@@ -143,18 +152,23 @@ namespace SongSwap_React_app.Controllers
                     continue;
                 }
 
+                count++;
                 itemIds.Add(searchResult.Items[0].Id);
+                await _hub.Clients.All.SendAsync("ReceiveMessage", playlistId, 
+                    new ProgressDto { Status = "search", Now = (int)Math.Round((double)(100 * count) / source.Items.Length) },
+                    cancellationToken: cancellationToken);
             }
 
+            await _hub.Clients.All.SendAsync("ReceiveMessage", playlistId, new ProgressDto { Status = "importing", Now = 100 }, cancellationToken: cancellationToken);
             var createRequest = new HttpRequestMessage(HttpMethod.Post, $"{musicapi_url}/{destinationId}/playlists");
             var createRequestBody = new List<KeyValuePair<string, string>>
             {
                 new("name", name)
             };
             createRequest.Content = new FormUrlEncodedContent(createRequestBody);
-            var createResponse = await client.SendAsync(createRequest);
+            var createResponse = await client.SendAsync(createRequest, cancellationToken);
             createResponse.EnsureSuccessStatusCode();
-            var createResponseBody = await createResponse.Content.ReadAsStringAsync();
+            var createResponseBody = await createResponse.Content.ReadAsStringAsync(cancellationToken);
             var newPlaylist = JsonSerializer.Deserialize<Playlist>(createResponseBody);
 
             var populateRequest = new HttpRequestMessage(HttpMethod.Post, $"{musicapi_url}/{destinationId}/playlists/{newPlaylist!.Id}/items");
@@ -165,10 +179,10 @@ namespace SongSwap_React_app.Controllers
                 populateRequestBody.Add(new KeyValuePair<string, string>("itemIds[]", itemId));
             }
             populateRequest.Content = new FormUrlEncodedContent(populateRequestBody);   
-            var populateResponse = await client.SendAsync(populateRequest);
+            var populateResponse = await client.SendAsync(populateRequest, cancellationToken);
             populateResponse.EnsureSuccessStatusCode();
-            
 
+            await _hub.Clients.All.SendAsync("ReceiveMessage", playlistId, new ProgressDto { Status = "done", Now = 100 }, cancellationToken);
             return Ok();
         }
     }

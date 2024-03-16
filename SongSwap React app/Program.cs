@@ -1,17 +1,25 @@
+using MassTransit;
 using Microsoft.OpenApi.Models;
+using SongSwap_React_app.Infrastructure;
 using SongSwap_React_app.Models.Services;
 using SongSwap_React_app.Startup;
 using Startup;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddMassTransit(x =>
+{
+    x.UsingRabbitMq();
+});
 builder.Services.AddScoped<AuthorizationService>();
 builder.Services.AddCofiguredHttpClient();
 builder.Services.AddControllersWithViews();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSignalR();
 builder.Services.AddSwaggerGen(opt =>
 {
-    opt.SwaggerDoc("v1", new OpenApiInfo { Title = "MyAPI", Version = "v1" });
+    opt.SwaggerDoc("v1", new OpenApiInfo { Title = "Songswap", Version = "v1" });
     opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
@@ -77,6 +85,7 @@ app.UseCors("AllowSpecificOrigin");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseLogging();
+app.MapHub<ProgressHub>("/hub");
 
 app.MapControllerRoute(
     name: "default",

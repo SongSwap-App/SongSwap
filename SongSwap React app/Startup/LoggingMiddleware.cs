@@ -1,4 +1,6 @@
-﻿using SongSwap_React_app.Controllers;
+﻿using MassTransit;
+using SharedModels;
+using SongSwap_React_app.Controllers;
 using SongSwap_React_app.Infrastructure;
 using System.Diagnostics;
 using System.Net;
@@ -11,16 +13,20 @@ namespace Startup
     public class LoggingMiddleware
     {
         private readonly RequestDelegate _next;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public LoggingMiddleware(RequestDelegate next)
+        public LoggingMiddleware(RequestDelegate next, IHttpClientFactory factory)
         {
             _next = next;
+            _httpClientFactory = factory;
         }
 
-        public async Task Invoke(HttpContext context, IHttpClientFactory clientFactory)
+        public async Task Invoke(HttpContext context, IPublishEndpoint publishEndpoint)
         {
             string? controller = null;
             context.Request.RouteValues.TryGetValue("controller", out object? controllerObj);
+
+            
 
             if (controllerObj != null)
             {
@@ -40,6 +46,10 @@ namespace Startup
                 {
                     await _next(context);
                 }
+                catch (OperationCanceledException)
+                {
+                    error = "Request cancelled by client";
+                }
                 catch (Exception ex) 
                 {
                     await HandleExceptionAsync(context, ex);
@@ -48,23 +58,24 @@ namespace Startup
 
 
                 sw.Stop();
-
                 var log = new ActionLog(DateTime.Now, action, arguments, sw.Elapsed.TotalSeconds, error, query);
+                sw.Restart();
+
+                
                 MonitoringController.Logs.Add(log);
 
-                var client = clientFactory.CreateClient();
-                var request = new HttpRequestMessage(HttpMethod.Post, $"https://loggingapp/api/logging")
-                {
-                    Content = JsonContent.Create(log)
-                };
                 //try
                 //{
-                //    await client.SendAsync(request);
+                //    FireAndForgetHttpCall(_httpClientFactory.CreateClient(), log);
+                //    //await publishEndpoint.Publish<ActionLogDto>(log);
+                //    //await publishEndpoint.Publish<ActionLog>(log);
                 //}
                 //catch (Exception ex)
                 //{
                 //    Console.WriteLine(ex.ToString());
                 //}
+
+                sw.Stop();
             }
             else
             {
@@ -79,8 +90,16 @@ namespace Startup
             await context.Response.WriteAsync(new ErrorDetails()
             {
                 StatusCode = context.Response.StatusCode,
-                Message = "Internal Server Error from the custom middleware."
+                Message = exception.Message
             }.ToString());
+        }
+
+        private static async Task FireAndForgetHttpCall(HttpClient client, ActionLog log)
+        {
+            await Task.Run(async () =>
+            {
+               await client.PostAsync("http://loggingapp/api/logging", JsonContent.Create(log));
+            });
         }
     }
 
@@ -95,10 +114,11 @@ namespace Startup
     public class ErrorDetails
     {
         public int StatusCode { get; set; }
-        public string Message { get; set; }
+        public string Message { get; set; } = string.Empty;
         public override string ToString()
         {
             return JsonSerializer.Serialize(this);
         }
     }
+ 
 }
