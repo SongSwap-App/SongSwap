@@ -8,10 +8,10 @@ using Startup;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddMassTransit(x =>
-{
-    x.UsingRabbitMq();
-});
+//builder.Services.AddMassTransit(x =>
+//{
+//    x.UsingRabbitMq();
+//});
 builder.Services.AddScoped<AuthorizationService>();
 builder.Services.AddCofiguredHttpClient();
 builder.Services.AddControllersWithViews();
