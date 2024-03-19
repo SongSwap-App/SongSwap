@@ -14,6 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 //{
 //    x.UsingRabbitMq();
 //});
+builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddAzureAppConfiguration();
 builder.Services.AddSingleton<AuthorizationService>();
 builder.Services.AddCofiguredHttpClient();
