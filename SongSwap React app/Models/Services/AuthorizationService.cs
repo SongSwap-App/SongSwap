@@ -9,9 +9,9 @@ namespace SongSwap_React_app.Models.Services
     {
         private readonly IConfiguration _configuration;
         private readonly SecretClient _secretClient;
-        private string? clientId;
-        private string? clientSecret;
-        private string? jwtSecret;
+        private string? clientId = null;
+        private string? clientSecret = null;
+        private string? jwtSecret = null;
 
         public AuthorizationService(IConfiguration configuration)
         {
