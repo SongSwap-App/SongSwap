@@ -1,5 +1,6 @@
 ﻿using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.Extensions.FileProviders;
 
 namespace SongSwap_React_app.Models.Services
@@ -7,12 +8,21 @@ namespace SongSwap_React_app.Models.Services
     public class AuthorizationService
     {
         private readonly IConfiguration _configuration;
+        private readonly SecretClient? _secretClient;
         private string? clientId;
         private string? clientSecret;
+        private string? jwtSecret;
 
         public AuthorizationService(IConfiguration configuration)
         {
             _configuration = configuration;
+            try
+            {
+                _secretClient = new SecretClient(vaultUri: new Uri(_configuration.GetValue<string>("KeyVault")), credential: new DefaultAzureCredential());
+            } catch
+            {
+                _secretClient = null;
+            }
         }
 
         public string GetBasic64Authentication()
@@ -27,8 +37,18 @@ namespace SongSwap_React_app.Models.Services
             }
 
             var plaintAuthorizationText = System.Text.Encoding.UTF8.GetBytes(clientId + ":" + clientSecret);
-            var base64Text = System.Convert.ToBase64String(plaintAuthorizationText);
+            var base64Text = Convert.ToBase64String(plaintAuthorizationText);
             return base64Text;
+        }
+
+        public string GetJwtSecret()
+        {
+            if (string.IsNullOrEmpty(jwtSecret)) 
+            {
+                jwtSecret = GetSecretOrEnvVar("JWTSecret");
+            }
+
+            return jwtSecret;
         }
 
         private string GetSecretOrEnvVar(string key)
@@ -47,14 +67,14 @@ namespace SongSwap_React_app.Models.Services
                         return content;
                     }
                 }
-            }
-
-            var client = new SecretClient(vaultUri: new Uri("https://songswapkeyvault.vault.azure.net/"), credential: new DefaultAzureCredential());
-            KeyVaultSecret secret = client.GetSecret(key).Value;
-            string? value = secret.Value;
-            if (!string.IsNullOrEmpty(value))
+            } else if (_secretClient != null)
             {
-                return value;
+                KeyVaultSecret secret = _secretClient.GetSecret(key).Value;
+                string? value = secret.Value;
+                if (!string.IsNullOrEmpty(value))
+                {
+                    return value;
+                }
             }
 
             return _configuration.GetValue<string>(key);

@@ -18,14 +18,17 @@ namespace SongSwap_React_app.Controllers
     [EnableCors("AllowSpecificOrigin")]
     public class UserController : ControllerBase
     {
-        private const string homepage = "http://localhost:3000/";
         private readonly AuthorizationService _authorizationService;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly string clientUrl;
+        private readonly string appUrl;
 
-        public UserController(AuthorizationService authorizationService, IHttpClientFactory httpClientFactory)
+        public UserController(AuthorizationService authorizationService, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _authorizationService = authorizationService;
             _httpClientFactory = httpClientFactory;
+            clientUrl = configuration.GetValue<string>("ClientURL");
+            appUrl = configuration.GetValue<string>("ApplicationURL");
         }
 
         [HttpGet("jwt")]
@@ -36,11 +39,11 @@ namespace SongSwap_React_app.Controllers
             Request.Cookies.TryGetValue("DestinationPlatform", out string? destPlatform);
             Request.Cookies.TryGetValue("DestIntegrationId", out string? DestIntegrationId);
 
-            var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("superSecretKey@345ssdssssdsdssdsdsds"));
+            var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authorizationService.GetJwtSecret()));
             var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
             var tokeOptions = new JwtSecurityToken(
-                issuer: "https://localhost:5000",
-                audience: "http://localhost:3000",
+                issuer: appUrl,
+                audience: clientUrl,
                 claims: new List<Claim>()
                 {
                     new("SourceIntegrationId", integrationId),
@@ -54,7 +57,7 @@ namespace SongSwap_React_app.Controllers
 
             var tokenString = new JwtSecurityTokenHandler().WriteToken(tokeOptions);
 
-            return Redirect(homepage + "callback?token=" + tokenString);
+            return Redirect(clientUrl + "callback?token=" + tokenString);
         }
 
         [HttpGet()]
@@ -115,7 +118,7 @@ namespace SongSwap_React_app.Controllers
                 return BadRequest();
             }
             byte[] data = Convert.FromBase64String(data64);
-            string decodedString = System.Text.Encoding.UTF8.GetString(data);
+            string decodedString = Encoding.UTF8.GetString(data);
             var node = JsonNode.Parse(decodedString)!;
 
             Response.Cookies.Append("SourceIntegrationId", node["integrationUserUUID"]!.ToString());
@@ -123,7 +126,7 @@ namespace SongSwap_React_app.Controllers
             Response.Cookies.Append("DestinationPlatform", dest);
 
 
-            return Redirect($"https://app.musicapi.com/songswap/{dest}/auth?returnUrl=https://localhost:5000/api/user/callback/destination");
+            return Redirect($"https://app.musicapi.com/songswap/{dest}/auth?returnUrl={appUrl}/api/user/callback/destination");
         }
 
         [HttpGet("callback/destination")]
@@ -147,11 +150,11 @@ namespace SongSwap_React_app.Controllers
                 return Unauthorized("IntegrationId is not found");
             }
 
-            var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("superSecretKey@345ssdssssdsdssdsdsds"));
+            var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authorizationService.GetJwtSecret()));
             var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
             var tokeOptions = new JwtSecurityToken(
-                issuer: "https://localhost:5000",
-                audience: "http://localhost:3000",
+                issuer: appUrl,
+                audience: clientUrl,
                 claims: new List<Claim>()
                 {
                     new("SourceIntegrationId", integrationId),
@@ -165,7 +168,7 @@ namespace SongSwap_React_app.Controllers
             
             var tokenString = new JwtSecurityTokenHandler().WriteToken(tokeOptions);
 
-            return Redirect(homepage + "callback?token=" + tokenString);
+            return Redirect(clientUrl + "/callback?token=" + tokenString);
         }
     }
 }
