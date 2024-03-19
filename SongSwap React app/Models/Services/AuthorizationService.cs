@@ -12,14 +12,15 @@ namespace SongSwap_React_app.Models.Services
         private string? clientId;
         private string? clientSecret;
         private string? jwtSecret;
-        
+
         public AuthorizationService(IConfiguration configuration)
         {
             _configuration = configuration;
             try
             {
                 _secretClient = new SecretClient(vaultUri: new Uri(configuration.GetValue<string>("KeyVault")), credential: new DefaultAzureCredential());
-            } catch
+            }
+            catch
             {
                 _secretClient = null;
             }
@@ -43,7 +44,7 @@ namespace SongSwap_React_app.Models.Services
 
         public string GetJwtSecret()
         {
-            if (string.IsNullOrEmpty(jwtSecret)) 
+            if (string.IsNullOrEmpty(jwtSecret))
             {
                 jwtSecret = GetSecretOrEnvVar("JWTSecret");
             }
@@ -67,13 +68,19 @@ namespace SongSwap_React_app.Models.Services
                         return content;
                     }
                 }
-            } else if (_secretClient != null)
+            }
+            else if (_secretClient != null)
             {
                 KeyVaultSecret secret = _secretClient.GetSecret(key).Value;
-                string? value = secret.Value;
+                string value = secret.Value;
+
+
                 if (!string.IsNullOrEmpty(value))
                 {
                     return value;
+                } else
+                {
+                    return "Couldn`t get value from keyvault";
                 }
             }
 

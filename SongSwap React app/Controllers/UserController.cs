@@ -47,7 +47,17 @@ namespace SongSwap_React_app.Controllers
             Request.Cookies.TryGetValue("DestinationPlatform", out string? destPlatform);
             Request.Cookies.TryGetValue("DestIntegrationId", out string? DestIntegrationId);
 
-            var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authorizationService.GetJwtSecret()));
+            string jwtSecret;
+
+            try
+            {
+                jwtSecret = _authorizationService.GetJwtSecret();
+            } catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
+            var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
             var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
             var tokeOptions = new JwtSecurityToken(
                 issuer: appUrl,
