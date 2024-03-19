@@ -12,13 +12,13 @@ namespace SongSwap_React_app.Models.Services
         private string? clientId;
         private string? clientSecret;
         private string? jwtSecret;
-
+        
         public AuthorizationService(IConfiguration configuration)
         {
             _configuration = configuration;
             try
             {
-                _secretClient = new SecretClient(vaultUri: new Uri(_configuration.GetValue<string>("KeyVault")), credential: new DefaultAzureCredential());
+                _secretClient = new SecretClient(vaultUri: new Uri(configuration.GetValue<string>("KeyVault")), credential: new DefaultAzureCredential());
             } catch
             {
                 _secretClient = null;
