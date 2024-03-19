@@ -20,6 +20,7 @@ namespace SongSwap_React_app.Controllers
     {
         private readonly AuthorizationService _authorizationService;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IConfiguration _configuration;
         private readonly string clientUrl;
         private readonly string appUrl;
 
@@ -27,8 +28,15 @@ namespace SongSwap_React_app.Controllers
         {
             _authorizationService = authorizationService;
             _httpClientFactory = httpClientFactory;
+            _configuration = configuration;
             clientUrl = configuration.GetValue<string>("ClientURL");
             appUrl = configuration.GetValue<string>("ApplicationURL");
+        }
+
+        [HttpGet("config")]
+        public IActionResult Config()
+        {
+            return Ok(JsonSerializer.Serialize(_configuration.AsEnumerable()));
         }
 
         [HttpGet("jwt")]
