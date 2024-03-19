@@ -1,10 +1,14 @@
-﻿using Microsoft.Extensions.FileProviders;
+﻿using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+using Microsoft.Extensions.FileProviders;
 
 namespace SongSwap_React_app.Models.Services
 {
     public class AuthorizationService
     {
         private readonly IConfiguration _configuration;
+        private string? clientId;
+        private string? clientSecret;
 
         public AuthorizationService(IConfiguration configuration)
         {
@@ -13,7 +17,16 @@ namespace SongSwap_React_app.Models.Services
 
         public string GetBasic64Authentication()
         {
-            var plaintAuthorizationText = System.Text.Encoding.UTF8.GetBytes(GetSecretOrEnvVar("MusicApi_ClientId") + ":" + GetSecretOrEnvVar("MusicApi_ClientSecret"));
+            if (string.IsNullOrEmpty(clientId))
+            {
+                clientId = GetSecretOrEnvVar("MusicApiClientId");
+            }
+            if (string.IsNullOrEmpty(clientSecret))
+            {
+                clientSecret = GetSecretOrEnvVar("MusicApiClientSecret");
+            }
+
+            var plaintAuthorizationText = System.Text.Encoding.UTF8.GetBytes(clientId + ":" + clientSecret);
             var base64Text = System.Convert.ToBase64String(plaintAuthorizationText);
             return base64Text;
         }
@@ -34,6 +47,14 @@ namespace SongSwap_React_app.Models.Services
                         return content;
                     }
                 }
+            }
+
+            var client = new SecretClient(vaultUri: new Uri("https://songswapkeyvault.vault.azure.net/"), credential: new DefaultAzureCredential());
+            KeyVaultSecret secret = client.GetSecret(key).Value;
+            string? value = secret.Value;
+            if (!string.IsNullOrEmpty(value))
+            {
+                return value;
             }
 
             return _configuration.GetValue<string>(key);

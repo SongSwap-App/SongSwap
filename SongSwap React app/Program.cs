@@ -1,4 +1,5 @@
 using MassTransit;
+using Microsoft.Extensions.Azure;
 using Microsoft.OpenApi.Models;
 using SongSwap_React_app.Infrastructure;
 using SongSwap_React_app.Models.Services;
@@ -12,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 //{
 //    x.UsingRabbitMq();
 //});
-builder.Services.AddScoped<AuthorizationService>();
+builder.Services.AddSingleton<AuthorizationService>();
 builder.Services.AddCofiguredHttpClient();
 builder.Services.AddControllersWithViews();
 builder.Services.AddEndpointsApiExplorer();

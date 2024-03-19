@@ -21,7 +21,7 @@ namespace Startup
             _httpClientFactory = factory;
         }
 
-        public async Task Invoke(HttpContext context, IPublishEndpoint publishEndpoint)
+        public async Task Invoke(HttpContext context)
         {
             string? controller = null;
             context.Request.RouteValues.TryGetValue("controller", out object? controllerObj);
