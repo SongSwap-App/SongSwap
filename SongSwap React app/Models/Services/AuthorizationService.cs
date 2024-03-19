@@ -80,7 +80,7 @@ namespace SongSwap_React_app.Models.Services
                     return value;
                 } else
                 {
-                    return "Couldn`t get value from keyvault";
+                    return "error";
                 }
             }
 

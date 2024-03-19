@@ -39,6 +39,19 @@ namespace SongSwap_React_app.Controllers
             return Ok(JsonSerializer.Serialize(_configuration.AsEnumerable()));
         }
 
+        [HttpGet("test")]
+        public IActionResult Test() 
+        {
+            var list = new List<KeyValuePair<string, string>>
+            {
+                new("KeyVault", _configuration.GetValue<string>("KeyVault")),
+                new("ApplicationURL", _configuration.GetValue<string>("ApplicationURL")),
+                new("ClientURL", _configuration.GetValue<string>("ClientURL"))
+            };
+
+            return Ok(list);
+        }
+
         [HttpGet("jwt")]
         public async Task<IActionResult> Jwt()
         {
@@ -47,17 +60,12 @@ namespace SongSwap_React_app.Controllers
             Request.Cookies.TryGetValue("DestinationPlatform", out string? destPlatform);
             Request.Cookies.TryGetValue("DestIntegrationId", out string? DestIntegrationId);
 
-            string jwtSecret;
-
-            try
+            if (_authorizationService.GetJwtSecret() == "error")
             {
-                jwtSecret = _authorizationService.GetJwtSecret();
-            } catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
+                return BadRequest("Couldn`t get value from key vault");
             }
 
-            var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
+            var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authorizationService.GetJwtSecret()));
             var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
             var tokeOptions = new JwtSecurityToken(
                 issuer: appUrl,
