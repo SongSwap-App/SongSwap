@@ -8,7 +8,7 @@ namespace SongSwap_React_app.Models.Services
     public class AuthorizationService
     {
         private readonly IConfiguration _configuration;
-        private readonly SecretClient? _secretClient;
+        private readonly SecretClient _secretClient;
         private string? clientId;
         private string? clientSecret;
         private string? jwtSecret;
@@ -62,21 +62,16 @@ namespace SongSwap_React_app.Models.Services
                     }
                 }
             }
-            else if (_secretClient != null)
+
+            KeyVaultSecret secret = _secretClient.GetSecret(key).Value;
+            string value = secret.Value;
+
+
+            if (!string.IsNullOrEmpty(value))
             {
-                KeyVaultSecret secret = _secretClient.GetSecret(key).Value;
-                string value = secret.Value;
-
-
-                if (!string.IsNullOrEmpty(value))
-                {
-                    return value;
-                }
-                else
-                {
-                    return "error";
-                }
+                return value;
             }
+
 
             return _configuration.GetValue<string>(key);
         }

@@ -33,12 +33,6 @@ namespace SongSwap_React_app.Controllers
             appUrl = configuration.GetValue<string>("ApplicationURL");
         }
 
-        [HttpGet("config")]
-        public IActionResult Config()
-        {
-            return Ok(JsonSerializer.Serialize(_configuration.AsEnumerable()));
-        }
-
         [HttpGet("test")]
         public IActionResult Test() 
         {
@@ -46,7 +40,9 @@ namespace SongSwap_React_app.Controllers
             {
                 new("KeyVault", _configuration.GetValue<string>("KeyVault")),
                 new("ApplicationURL", _configuration.GetValue<string>("ApplicationURL")),
-                new("ClientURL", _configuration.GetValue<string>("ClientURL"))
+                new("ClientURL", _configuration.GetValue<string>("ClientURL")),
+                new("JWTSecret", _authorizationService.GetJwtSecret()),
+                new("api",_authorizationService.GetBasic64Authentication())
             };
 
             return Ok(list);
