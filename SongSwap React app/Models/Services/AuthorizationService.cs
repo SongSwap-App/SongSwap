@@ -16,14 +16,7 @@ namespace SongSwap_React_app.Models.Services
         public AuthorizationService(IConfiguration configuration)
         {
             _configuration = configuration;
-            try
-            {
-                _secretClient = new SecretClient(vaultUri: new Uri(configuration.GetValue<string>("KeyVault")), credential: new DefaultAzureCredential());
-            }
-            catch
-            {
-                _secretClient = null;
-            }
+            _secretClient = new SecretClient(vaultUri: new Uri(configuration.GetValue<string>("KeyVault")), credential: new DefaultAzureCredential());
         }
 
         public string GetBasic64Authentication()
@@ -78,7 +71,8 @@ namespace SongSwap_React_app.Models.Services
                 if (!string.IsNullOrEmpty(value))
                 {
                     return value;
-                } else
+                }
+                else
                 {
                     return "error";
                 }
