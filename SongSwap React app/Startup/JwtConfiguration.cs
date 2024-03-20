@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.DataProtection.KeyManagement;
-using Microsoft.Extensions.Configuration;
+﻿using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -9,8 +9,10 @@ namespace SongSwap_React_app.Startup
 {
     public static class JwtConfiguration
     {
-        public static IServiceCollection AddConfiguredJwtAuthentication(this IServiceCollection services)
+        public static IServiceCollection AddConfiguredJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
         {
+            var secretClient = new SecretClient(vaultUri: new Uri(configuration.GetValue<string>("KeyVault")), credential: new DefaultAzureCredential());
+
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -24,16 +26,16 @@ namespace SongSwap_React_app.Startup
                     ValidateAudience = true,
                     ValidateIssuerSigningKey = true,
                     ValidateLifetime = true,
-                    ValidIssuer = "https://localhost:5000",
-                    ValidAudience = "http://localhost:3000",
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(GetSecretKey()))
+                    ValidIssuer = configuration.GetValue<string>("ApplicationURL"),
+                    ValidAudience = configuration.GetValue<string>("ClientURL"),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(GetSecretKey(secretClient)))
                 };
             });
 
             return services;
         }
 
-        private static string GetSecretKey()
+        private static string GetSecretKey(SecretClient? secretClient = null)
         {
             const string DOCKER_SECRET_PATH = "/run/secrets/";
             if (Directory.Exists(DOCKER_SECRET_PATH))
@@ -49,6 +51,12 @@ namespace SongSwap_React_app.Startup
                         return content;
                     }
                 }
+            }
+
+            if (secretClient != null)
+            {
+                KeyVaultSecret secret = secretClient.GetSecret("JWTSecret").Value;
+                return secret.Value;
             }
 
             return "superSecretKey@345ssdssssdsdssdsdsds";
