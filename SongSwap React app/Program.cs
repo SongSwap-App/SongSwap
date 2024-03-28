@@ -1,4 +1,6 @@
 using MassTransit;
+using Microsoft.Extensions.Azure;
+using Microsoft.Extensions.Configuration;
 using Microsoft.OpenApi.Models;
 using SongSwap_React_app.Infrastructure;
 using SongSwap_React_app.Models.Services;
@@ -8,18 +10,19 @@ using Startup;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddMassTransit(x =>
-{
-    x.UsingRabbitMq();
-});
-builder.Services.AddScoped<AuthorizationService>();
+//builder.Services.AddMassTransit(x =>
+//{
+//    x.UsingRabbitMq();
+//});
+builder.Services.AddAzureAppConfiguration();
+builder.Services.AddSingleton<AuthorizationService>();
 builder.Services.AddCofiguredHttpClient();
 builder.Services.AddControllersWithViews();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSignalR();
 builder.Services.AddSwaggerGen(opt =>
 {
-    opt.SwaggerDoc("v1", new OpenApiInfo { Title = "Songswap", Version = "v1" });
+    opt.SwaggerDoc("v1", new OpenApiInfo { Title = "Songswap API", Version = "v1" });
     opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
@@ -48,14 +51,14 @@ builder.Services.AddSwaggerGen(opt =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigin",
-        builder => builder.WithOrigins("https://localhost:44418", "http://localhost:3000")
+        corsBuilder => corsBuilder.WithOrigins("https://localhost:44418", "http://localhost:3000", builder.Configuration.GetValue<string>("ClientURL"))
         .SetIsOriginAllowedToAllowWildcardSubdomains()
         .AllowCredentials()
         .AllowAnyHeader()
         .AllowAnyMethod()
         );
 });
-builder.Services.AddConfiguredJwtAuthentication();
+builder.Services.AddConfiguredJwtAuthentication(builder.Configuration);
 
 var app = builder.Build();
 

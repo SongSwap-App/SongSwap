@@ -4,8 +4,7 @@
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
       "serviceActions": {
-        "songswap": "StartDebugging",
-        "loggingapp": "StartDebugging"
+        "songswap": "StartDebugging"
       }
     }
   }

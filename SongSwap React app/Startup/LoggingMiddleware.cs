@@ -21,7 +21,7 @@ namespace Startup
             _httpClientFactory = factory;
         }
 
-        public async Task Invoke(HttpContext context, IPublishEndpoint publishEndpoint)
+        public async Task Invoke(HttpContext context)
         {
             string? controller = null;
             context.Request.RouteValues.TryGetValue("controller", out object? controllerObj);
@@ -59,23 +59,9 @@ namespace Startup
 
                 sw.Stop();
                 var log = new ActionLog(DateTime.Now, action, arguments, sw.Elapsed.TotalSeconds, error, query);
-                sw.Restart();
 
-                
                 MonitoringController.Logs.Add(log);
 
-                //try
-                //{
-                //    FireAndForgetHttpCall(_httpClientFactory.CreateClient(), log);
-                //    //await publishEndpoint.Publish<ActionLogDto>(log);
-                //    //await publishEndpoint.Publish<ActionLog>(log);
-                //}
-                //catch (Exception ex)
-                //{
-                //    Console.WriteLine(ex.ToString());
-                //}
-
-                sw.Stop();
             }
             else
             {
