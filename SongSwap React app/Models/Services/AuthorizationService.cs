@@ -8,7 +8,7 @@ namespace SongSwap_React_app.Models.Services
     public class AuthorizationService
     {
         private readonly IConfiguration _configuration;
-        private readonly SecretClient _secretClient;
+        private readonly SecretClient? _secretClient;
         private string? clientId = null;
         private string? clientSecret = null;
         private string? jwtSecret = null;
@@ -16,7 +16,15 @@ namespace SongSwap_React_app.Models.Services
         public AuthorizationService(IConfiguration configuration)
         {
             _configuration = configuration;
-            _secretClient = new SecretClient(vaultUri: new Uri(configuration.GetValue<string>("KeyVault")), credential: new DefaultAzureCredential());
+            try
+            {
+                _secretClient = new SecretClient(vaultUri: new Uri(configuration.GetValue<string>("KeyVault")), credential: new DefaultAzureCredential());
+            }
+            catch
+            {
+                _secretClient = null;
+            }
+
         }
 
         public string GetBasic64Authentication()
@@ -63,15 +71,16 @@ namespace SongSwap_React_app.Models.Services
                 }
             }
 
-            KeyVaultSecret secret = _secretClient.GetSecret(key).Value;
-            string value = secret.Value;
-
-
-            if (!string.IsNullOrEmpty(value))
+            if (_secretClient != null)
             {
-                return value;
-            }
+                KeyVaultSecret secret = _secretClient.GetSecret(key).Value;
+                string value = secret.Value;
 
+                if (!string.IsNullOrEmpty(value))
+                {
+                    return value;
+                }
+            }
 
             return _configuration.GetValue<string>(key);
         }

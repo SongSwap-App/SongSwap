@@ -60,7 +60,7 @@ namespace SongSwap_React_app.Controllers
 
             var content = await response.Content.ReadAsStringAsync();
             var playlists = JsonSerializer.Deserialize<PlaylistsResponse>(content);
-            
+
             if (playlists == null)
             {
                 return NotFound();
@@ -83,18 +83,18 @@ namespace SongSwap_React_app.Controllers
             {
                 var content = await response.Content.ReadAsStringAsync();
                 var items = JsonSerializer.Deserialize<PlaylistItemsResponse>(content);
-                return Ok(items!.Items);  
+                return Ok(items!.Items);
             }
-            else 
+            else
             {
-                return BadRequest(); 
+                return BadRequest();
             }
         }
 
         [HttpPost("import/{playlistId}")]
         public async Task<IActionResult> ImportPlaylist(string playlistId, CancellationToken cancellationToken)
         {
-            await _hub.Clients.All.SendAsync("ReceiveMessage", playlistId, new ProgressDto { Status = "started", Now = 0}, cancellationToken: cancellationToken);
+            await _hub.Clients.All.SendAsync("ReceiveMessage", playlistId, new ProgressDto { Status = "started", Now = 0 }, cancellationToken: cancellationToken);
 
             string? sourceId = User.FindFirstValue("SourceIntegrationId");
             string? destinationId = User.FindFirstValue("DestIntegrationId");
@@ -118,6 +118,22 @@ namespace SongSwap_React_app.Controllers
                 return NotFound();
             }
 
+            while (source.Items.Length != source.TotalItems)
+            {
+                var expandSourceRequest = new HttpRequestMessage(HttpMethod.Get, $"{musicapi_url}/{sourceId}/playlists/{playlistId}/items?nextParam={source.NextParam}");
+                var expandResponse = await client.SendAsync(expandSourceRequest, cancellationToken);
+                var expandContent = await expandResponse.Content.ReadAsStringAsync(cancellationToken);
+                var expand = JsonSerializer.Deserialize<PlaylistItemsResponse>(expandContent);
+
+                if (expand == null)
+                {
+                    return NotFound();
+                }
+
+                source.Items = source.Items.Concat(expand.Items).ToArray();
+                source.NextParam = expand.NextParam;
+            }
+
 
             var nameRequest = new HttpRequestMessage(HttpMethod.Get, $"{musicapi_url}/{sourceId}/playlists/{playlistId}");
             var nameResponce = await client.SendAsync(nameRequest, cancellationToken);
@@ -138,7 +154,7 @@ namespace SongSwap_React_app.Controllers
                     new("track", item.Name),
                     new("artist", artist ?? string.Empty),
                     new("album", string.Empty),
-                    new("isrc", item.Isrc ?? string.Empty)
+                    new("isrc",  string.Empty)
                 };
                 searchRequest.Content = new FormUrlEncodedContent(searchRequestBody);
 
@@ -147,14 +163,14 @@ namespace SongSwap_React_app.Controllers
                 var content = await searchResponce.Content.ReadAsStringAsync(cancellationToken);
                 var searchResult = JsonSerializer.Deserialize<PlaylistItemsResponse>(content);
 
-                if (searchResult == null)
+                if (searchResult == null || searchResult.TotalItems == 0)
                 {
                     continue;
                 }
 
                 count++;
                 itemIds.Add(searchResult.Items[0].Id);
-                await _hub.Clients.All.SendAsync("ReceiveMessage", playlistId, 
+                await _hub.Clients.All.SendAsync("ReceiveMessage", playlistId,
                     new ProgressDto { Status = "search", Now = (int)Math.Round((double)(100 * count) / source.Items.Length) },
                     cancellationToken: cancellationToken);
             }
@@ -178,7 +194,7 @@ namespace SongSwap_React_app.Controllers
             {
                 populateRequestBody.Add(new KeyValuePair<string, string>("itemIds[]", itemId));
             }
-            populateRequest.Content = new FormUrlEncodedContent(populateRequestBody);   
+            populateRequest.Content = new FormUrlEncodedContent(populateRequestBody);
             var populateResponse = await client.SendAsync(populateRequest, cancellationToken);
             populateResponse.EnsureSuccessStatusCode();
 
