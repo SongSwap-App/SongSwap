@@ -146,7 +146,7 @@ namespace SongSwap_React_app.Controllers
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var artist = item.Artists?.FirstOrDefault()?.Name;
-                var searchRequest = new HttpRequestMessage(HttpMethod.Post, $"{musicapi_url}/{destinationId}/search");
+                var searchRequest = new HttpRequestMessage(HttpMethod.Post, $"{musicapi_url}/{destinationId}");
                 searchRequest.Options.Set(new HttpRequestOptionsKey<int>("limitParam"), 1);
                 var searchRequestBody = new List<KeyValuePair<string, string>>()
                 {
@@ -154,16 +154,16 @@ namespace SongSwap_React_app.Controllers
                     new("track", item.Name),
                     new("artist", artist ?? string.Empty),
                     new("album", string.Empty),
-                    new("isrc",  string.Empty)
+                    new("isrc",  item.Isrc ?? string.Empty)
                 };
                 searchRequest.Content = new FormUrlEncodedContent(searchRequestBody);
 
                 var searchResponce = await client.SendAsync(searchRequest, cancellationToken);
 
                 var content = await searchResponce.Content.ReadAsStringAsync(cancellationToken);
-                var searchResult = JsonSerializer.Deserialize<PlaylistItemsResponse>(content);
+                var searchResult = JsonSerializer.Deserialize<SearchResponse>(content);
 
-                if (searchResult == null || searchResult.TotalItems == 0)
+                if (searchResult == null || searchResult.Items.Length == 0)
                 {
                     continue;
                 }
