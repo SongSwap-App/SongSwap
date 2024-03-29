@@ -12,6 +12,6 @@ namespace SongSwap_React_app.Models
         public string? NextParam { get; set; }
 
         [JsonPropertyName("totalItems")]
-        public int TotalItems { get; set; }
+        public int? TotalItems { get; set; }
     }
 }
